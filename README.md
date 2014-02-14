@@ -16,6 +16,13 @@ Using POCO requires MATLAB. We have tested it successfully with Matlab 2007a to 
 
 For instructions on how to use POCO, see the [docs/plotExample.html](http://htmlpreview.github.io/?https://github.com/lsinfo3/poco/blob/master/docs/plotExample.html) file.
 
+Demos
+------------------
+POCO has been / will be demonstrated at the following conferences:
+
+* [IEEE NOMS 2014, Krakow, Poland](http://noms2014.ieee-noms.org/): POCO GUI (source code to be published soon)
+* [IEEE INFOCOM 2014, Toronto, Canada](http://www.ieee-infocom.org/): POCO<sup>PLC</sup> (source code to be published soon)
+
 Authors
 -------
 All authors are staff members at the [Chair of Communication Networks](http://www3.informatik.uni-wuerzburg.de) at the [University of Wuerzburg, Germany](http://www.uni-wuerzburg.de):
