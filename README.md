@@ -3,7 +3,7 @@ Pareto Optimal Controller Placement (POCO)
 
 A Matlab-based tool for calculating pareto-optimal placements of controllers in a network topology.
 
-The findings of the evaluations done with POCO have been published in the paper **"Pareto-Optimal Resilient Controller Placement in SDN-based Core Networks"** by David Hock, Matthias Hartmann, Steffen Gebert, Michael Jarschel, Thomas Zinner, Phuoc Tran-Gia from the [University of Wuerzburg](http://www3.informatik.uni-wuerzburg.de/), Germany
+The findings of the evaluations done with POCO have been published in the paper **"Pareto-Optimal Resilient Controller Placement in SDN-based Core Networks"** by David Hock, Matthias Hartmann, Steffen Gebert, Michael Jarschel, Thomas Zinner, Phuoc Tran-Gia from the [University of Wuerzburg](http://www3.informatik.uni-wuerzburg.de/), Germany at the [25th International Teletraffic Congress (ITC)](http://www.itc25.org), Shanghai, China, September 2013.
 
 
 Paper Abstract
