@@ -20,8 +20,8 @@ Demos
 ------------------
 POCO has been / will be demonstrated at the following conferences:
 
-* [IEEE NOMS 2014, Krakow, Poland](http://noms2014.ieee-noms.org/): POCO GUI (source code to be published soon)
-* [IEEE INFOCOM 2014, Toronto, Canada](http://www.ieee-infocom.org/): POCO<sup>PLC</sup> (source code to be published soon)
+* [IEEE NOMS 2014, Krakow, Poland](http://noms2014.ieee-noms.org/): POCO GUI: A user-friendly interface for POCO (*source code to be published soon*)
+* [IEEE INFOCOM 2014, Toronto, Canada](http://www.ieee-infocom.org/): POCO-PLC: Combining POCO with a distributed application deployed across the [PlanetLab](http://www.planet-lab.org/) research network. (*source code to be published soon*)
 
 Authors
 -------
