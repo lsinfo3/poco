@@ -43,3 +43,6 @@ Acknowledgements
 ----------------
 
 This work has been performed in the framework of the CELTIC EUREKA project [SASER-SIEGFRIED](http://www.celtic-initiative.org/Projects/Celtic-Plus-Projects/2011/SASER/SASER-b-Siegfried/saser-b-default.asp) (Project ID CPP2011/2-5), and it is partly funded by the [BMBF](http://www.bmbf.de/en/) (Project ID 16BP12308). The authors alone are responsible for the content of the paper.
+
+![SASER logo](http://saser.eu/fileadmin/content/saser/logos/saser/logo-hero.png)
+
