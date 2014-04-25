@@ -3,25 +3,18 @@ Pareto Optimal Controller Placement (POCO)
 
 A Matlab-based tool for calculating pareto-optimal placements of controllers in a network topology.
 
-The findings of the evaluations done with POCO have been published in the paper **"Pareto-Optimal Resilient Controller Placement in SDN-based Core Networks"** by David Hock, Matthias Hartmann, Steffen Gebert, Michael Jarschel, Thomas Zinner, Phuoc Tran-Gia from the [University of Wuerzburg](http://www3.informatik.uni-wuerzburg.de/), Germany at the [25th International Teletraffic Congress (ITC)](http://www.itc25.org), Shanghai, China, September 2013.
+The findings of the evaluations done with POCO have been published in the paper **"Pareto-Optimal Resilient Controller Placement in SDN-based Core Networks"** by David Hock, Matthias Hartmann, Steffen Gebert, Michael Jarschel, Thomas Zinner, Phuoc Tran-Gia from the University of Wuerzburg, Germany
 
 
 Paper Abstract
 --------------
 With the introduction of [Software Defined Networking (SDN)](http://en.wikipedia.org/wiki/Software-defined_networking), the concept of an external and optionally centralized network control plane, i.e. controller, is drawing the attention of researchers and industry. A particularly important task in the SDN context is the placement of such external resources in the network. In this paper, we discuss important aspects of the controller placement problem with a focus on SDN-based core networks, including different types of resilience and failure tolerance. When several performance and resilience metrics are considered, there is usually no single best controller placement solution, but a trade-off between these metrics. We introduce our framework for resilient *Pareto-based Optimal COntroller placement (POCO)* that provides the operator of a network with all [Pareto-optimal](http://en.wikipedia.org/wiki/Pareto_optimality) placements. The ideas and mechanisms are illustrated using the [Internet2 OS3E topology](http://www.internet2.edu/network/ose/) and further evaluated on more than 140 topologies of the [Topology Zoo](http://www.topology-zoo.org/). In particular, our findings reveal that for most of the topologies more than 20% of all nodes need to be controllers to assure a continuous connection of all nodes to one of the controllers in any arbitrary double link or node failure scenario.
 
-Requirements
-----------------------
+About POCO
+------------------
 Using POCO requires MATLAB. We have tested it successfully with Matlab 2007a to 2012b. For Matlab 2013a and later, we recently introduced some compatibilty fixes, however cannot guarantee full functionality, yet.
 
 For instructions on how to use POCO, see the [docs/plotExample.html](http://htmlpreview.github.io/?https://github.com/lsinfo3/poco/blob/master/docs/plotExample.html) file.
-
-Demos
-------------------
-POCO has been / will be demonstrated at the following conferences:
-
-* [IEEE NOMS 2014, Krakow, Poland](http://noms2014.ieee-noms.org/): POCO GUI: A user-friendly interface for POCO (*source code to be published soon*)
-* [IEEE INFOCOM 2014, Toronto, Canada](http://www.ieee-infocom.org/): POCO-PLC: Combining POCO with a distributed application deployed across the [PlanetLab](http://www.planet-lab.org/) research network. (*source code to be published soon*)
 
 Authors
 -------
@@ -38,11 +31,3 @@ License
 -------
 
 This software is licensed under the [GNU General Public License (GPL)](http://www.gnu.org/licenses/gpl.html) version 3 or later.
-
-Acknowledgements
-----------------
-
-This work has been performed in the framework of the CELTIC EUREKA project [SASER-SIEGFRIED](http://www.celtic-initiative.org/Projects/Celtic-Plus-Projects/2011/SASER/SASER-b-Siegfried/saser-b-default.asp) (Project ID CPP2011/2-5), and it is partly funded by the [BMBF](http://www.bmbf.de/en/) (Project ID 16BP12308). The authors alone are responsible for the content of the paper.
-
-![SASER logo](http://saser.eu/fileadmin/content/saser/logos/saser/logo-hero.png)
-
