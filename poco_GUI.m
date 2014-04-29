@@ -3,7 +3,7 @@
 %
 %   Copyright 2012-2013 David Hock, Stefan Geißler, Fabian Helmschrott,
 %                       Steffen Gebert
-%                       Chair of Communication Networks, Uni Würzburg   
+%                       Chair of Communication Networks, Uni Wuerzburg   
 %
 function poco_GUI
 % Check Matlab-version
@@ -70,7 +70,7 @@ maxarrayPLC=[];
 uncoveredarrayPLC=[];
 balancearrayPLC=[];
 plcCounter=0;
-plcFileCounter=10000;
+plcFileCounter=11100;
 newPLCCalc=0;
 currentmaxidxHist=[];
 
@@ -172,7 +172,7 @@ hPlotAxesPLCbar3b     =   axes('Parent', hFigurePLC,'Units', 'normalized','Handl
 % File menu
 hFileMenu = uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','File');
     hOpenMenu = uimenu('Parent',hFileMenu,'HandleVisibility','on','Label','Open...','Callback', @OpenTopologyCallback,'Accelerator','O');
-    hSaveAsMenu = uimenu('Parent',hFileMenu,'HandleVisibility','on','Label','Save as','Accelerator','q','Enable','off','Callback', @SaveAsTopologyCallback);
+    hSaveAsMenu = uimenu('Parent',hFileMenu,'HandleVisibility','on','Label','Save as','Accelerator','S','Enable','off','Callback', @SaveAsTopologyCallback);
     hResetAllMenu = uimenu('Parent',hFileMenu,'Label','Close','HandleVisibility','on','Callback', @resetAllHandle,'Accelerator','W','Enable','off');
     hImportMenu = uimenu('Parent',hFileMenu,'Label','Import','HandleVisibility','on','Separator','on','Enable','off');
         hImportNodeWeightsMenu = uimenu('Parent',hImportMenu,'Label','Node weights','HandleVisibility','on','Callback',@importNodeWeights);
@@ -218,7 +218,7 @@ hPlacementsMenu  = uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','
             hCMenuitem.(['Ck' num2str(i)])  =   uimenu('Parent',hCMenuitem.base,'Label',['k=' num2str(i)],'HandleVisibility','on','Callback',{@optimizeControllerFailure,i});
             end
         hNodeWeightsMenuItem = uimenu('Parent',hCalculatePlacementsMenu,'Label','Use node weights','HandleVisibility','on','Checked','off','Separator','on','Callback', @toggleNodeWeights,'Visible','off','Enable','off');
-    hOpenPlacementsMenuitem  =   uimenu('Parent',hPlacementsMenu,'Label','Open...','HandleVisibility','on','Callback',@loadPlacementsCallback,'Accelerator','O','Separator','on');
+    hOpenPlacementsMenuitem  =   uimenu('Parent',hPlacementsMenu,'Label','Open...','HandleVisibility','on','Callback',@loadPlacementsCallback,'Separator','on');
     hSavePlacementsMenuitem  =   uimenu('Parent',hPlacementsMenu,'Label','Save','HandleVisibility','on','Callback',@savePlacementsCallback,'Enable','off');
 
 % View menu
@@ -236,16 +236,16 @@ hViewMenu = uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','View','
         hViewMaxLatencyCCMenuitem = uimenu('Parent',hPredefinedViewsMenu,'Label','<html>Max controller to controller latency only</html>','HandleVisibility','on','Callback',{@plotFiguresCallbackMenu,9},'Accelerator','9');
         hViewControllerlessMenuitem = uimenu('Parent',hPredefinedViewsMenu,'Label','<html>Controller-less nodes heatmap only</html>','HandleVisibility','on','Callback',{@plotFiguresCallbackMenu,0},'Accelerator','0');
     hThemesMenu = uimenu('Parent',hViewMenu,'Label','Themes','HandleVisibility','on','Enable','on','Separator','on');
-        hThemesClassicMenuitem = uimenu('Parent',hThemesMenu,'Label','Classic','HandleVisibility','on','Enable','on','Callback',{@changeThemeCallback,[1 1 1], [0 0 0]},'Checked','on');
-        hThemesDarkMenuitem = uimenu('Parent',hThemesMenu,'Label','Dark','HandleVisibility','on','Enable','on','Callback',{@changeThemeCallback,[0.26 0.26 0.26],[0.8 0.8 0.8]});
+        hThemesClassicMenuitem = uimenu('Parent',hThemesMenu,'Label','Classic','HandleVisibility','on','Enable','on','Callback',{@changeThemeCallback,[1 1 1], [0 0 0]},'Checked','on','Accelerator','');
+        hThemesDarkMenuitem = uimenu('Parent',hThemesMenu,'Label','Dark','HandleVisibility','on','Enable','on','Callback',{@changeThemeCallback,[0.26 0.26 0.26],[0.8 0.8 0.8]},'Accelerator','K');
     hViewModeMenu = uimenu('Parent',hViewMenu,'Label','Mode','HandleVisibility','on','Enable','on');
-        hFullViewMenuitem = uimenu('Parent',hViewModeMenu,'Label','Full','HandleVisibility','on','Callback',@fullView,'Checked','on');
-        hCompactViewMenuitem = uimenu('Parent',hViewModeMenu,'Label','Compact','HandleVisibility','on','Callback',@compactView);
+        hFullViewMenuitem = uimenu('Parent',hViewModeMenu,'Label','Full','HandleVisibility','on','Callback',@fullView,'Checked','on','Accelerator','');
+        hCompactViewMenuitem = uimenu('Parent',hViewModeMenu,'Label','Compact','HandleVisibility','on','Callback',@compactView,'Accelerator','T');
     hExtractMenuitem = uimenu('Parent',hViewMenu,'Label','Duplicate plot','HandleVisibility','on','Callback', @duplicatePlot,'Accelerator','D','Separator','on','Enable','off');
 
 % PLC Menu
 hPLCMenu      =   uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','POCO PLC','Visible','on');
-    hInitPLCMenuitem = uimenu('Parent',hPLCMenu,'Label','Start POCO PLC','HandleVisibility','on','Callback',@InitPOCOPLC);
+    hInitPLCMenuitem = uimenu('Parent',hPLCMenu,'Label','Start POCO PLC','HandleVisibility','on','Callback',@InitPOCOPLC,'Accelerator','P');
     hStopPLCMenuitem = uimenu('Parent',hPLCMenu,'Label','Stop POCO PLC','HandleVisibility','on','Callback',@StopPOCOPLC,'Visible','off');
     hLoadHistPLCMenuitem = uimenu('Parent',hPLCMenu,'Label','Load history...','HandleVisibility','on','Callback',@loadPLCHistory,'Visible','off','Separator','on');
     hSaveHistPLCMenuitem = uimenu('Parent',hPLCMenu,'Label','Save Planetlab history','HandleVisibility','on','Callback',@savePLCHistoryCallback,'Visible','off','Enable','off');
@@ -460,6 +460,9 @@ OpenTopologyCallback;
         failedControllerNamesOriginal=nodenames(failedControllersOriginal);
         [topologyPLC,coordinatesPLC,tmPLC,nodenamesPLC]=loadNewPLCfile(plcFileCounter);
         plcFileCounter=plcFileCounter+1;
+        if plcFileCounter>11199
+            plcFileCounter=11100;
+        end
         if ~isempty(topologyPLC)
             controllerplacesPLC=[];
             for m=1:length(controllernamesOriginal)
@@ -1993,7 +1996,7 @@ OpenTopologyCallback;
         uncoveredarrayPLC=[];
         balancearrayPLC=[];
         plcCounter=0;
-        plcFileCounter=10000;
+        plcFileCounter=11100;
         newPLCCalc=0;
         currentmaxidxHist=[];
         mValues={};
@@ -2187,7 +2190,7 @@ OpenTopologyCallback;
     function openAbout(hObject, eventdata)
         hAboutFig = figure('MenuBar','none','Toolbar','none','HandleVisibility','on','Name', 'About','NumberTitle','off','Position', [(screensize(3)/2 - 250), (screensize(4)/2 - 300), 500, 600],'Resize','of','Color','w');
         imgsrc = strcat('file:/',pwd,'/images/pocologocollage.png');
-        text = strcat('<html><center><img src="',imgsrc,'" border="0"><br><br><font family="verdana"><span style="font-size:20pt;">POCO: A framework for Pareto-Optimal Resilient Controller Placement</span><br><br>&copy; 2012-2014<br><br>David Hock, Stefan Geißler, Fabian Helmschrott, Steffen Gebert<br><br>Chair of Communication Networks, University of W&uuml;rzburg, Germany<br><br>http://www3.informatik.uni-wuerzburg.de/research/projects/saser/poco/<br>https://github.com/lsinfo3/poco</center></html>');
+        text = strcat('<html><center><img src="',imgsrc,'" border="0"><br><br><font family="verdana"><span style="font-size:20pt;">POCO: A framework for Pareto-Optimal Resilient Controller Placement</span><br><br>&copy; 2012-2014<br><br>David Hock, Stefan Gei&szlig;ler, Fabian Helmschrott, Steffen Gebert<br><br>Chair of Communication Networks, University of W&uuml;rzburg, Germany<br><br>http://www3.informatik.uni-wuerzburg.de/poco<br>https://github.com/lsinfo3/poco</center></html>');
         je = javax.swing.JEditorPane( 'text/html', text );
         je.setEditable(false);
         [hcomponent, hcontainer] = javacomponent( je, [], hAboutFig );
@@ -2538,6 +2541,8 @@ OpenTopologyCallback;
         if strcmp(get(hThemesClassicMenuitem,'Checked'),'off')
             checkedClassic = 'on';
             checkedDark = 'off';
+            set(hThemesClassicMenuitem, 'Accelerator','');
+            set(hThemesDarkMenuitem, 'Accelerator','K');
             set(hPlotAxes2,'Color','w');
             set(get(hPlotAxes2,'XLabel'),'Color','k');
             set(hPlotAxes2,'XColor','k','YColor','k'); 
@@ -2551,6 +2556,8 @@ OpenTopologyCallback;
         else
             checkedClassic = 'off';
             checkedDark = 'on';
+            set(hThemesClassicMenuitem, 'Accelerator','K');
+            set(hThemesDarkMenuitem, 'Accelerator','');
             set(get(hPlotAxes2,'XLabel'),'Color','w');
             set(hPlotAxes2,'XColor','w','YColor','w');
             set(hEditControllerIDs,'ForegroundColor','w','BackgroundColor',[0.4 0.4 0.4]);
@@ -2590,12 +2597,14 @@ OpenTopologyCallback;
     function compactView(hObject, eventdata)
         set(hCompactViewMenuitem,'Checked','on');
         set(hFullViewMenuitem,'Checked','off');        
+        set(hCompactViewMenuitem, 'Accelerator','');
+        set(hFullViewMenuitem, 'Accelerator','T');
         set(hPanelAxes2,'Visible','off');
         set(hPanelAxes1,'Position',[0.05 0.04 0.72 0.95]);
         set(hYAxisLabel,'Visible','off');
         set(hYAxisPopupMenu,'Visible','off');
         set(hXAxisLabel,'Visible','off');
-        set(hXAxisPopupMenu,'Visible','off');
+        set(hXAxisPopupMenu,'Visible','off');        
     end
 
 
@@ -2604,7 +2613,9 @@ OpenTopologyCallback;
 % pareto-plot
     function fullView(hObject, eventdata)
         set(hCompactViewMenuitem,'Checked','off');
-        set(hFullViewMenuitem,'Checked','on');
+        set(hFullViewMenuitem,'Checked','on');     
+        set(hCompactViewMenuitem, 'Accelerator','T');
+        set(hFullViewMenuitem, 'Accelerator','');
         set(hPanelAxes2,'Visible','on');
         set(hPanelAxes1,'Position',[0.05 0.5 0.72 0.47]);
         if ~isempty(get(hYAxisPopupMenu,'String'))
