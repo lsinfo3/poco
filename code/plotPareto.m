@@ -30,9 +30,9 @@
 %
 %   For example use cases, see also PLOTEXAMPLE.
 
-%   Copyright 2012-2013 David Hock, Stefan Geißler, Fabian Helmschrott,
+%   Copyright 2012-2013 David Hock, Stefan GeiÃŸler, Fabian Helmschrott,
 %                       Steffen Gebert
-%                       Chair of Communication Networks, Uni Würzburg   
+%                       Chair of Communication Networks, Uni WÃ¼rzburg   
 
 function [paretoidx textXaxis textYaxis]=plotPareto(xin,yin,varargin)
 

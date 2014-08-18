@@ -23,7 +23,7 @@
 %                       Steffen Gebert
 %                       Chair of Communication Networks, Uni Würzburg    
 
-function evaluationResult=evaluateControllerFailure(topology,numberOfControllers,nodeWeights,isPLC,singlePlacementInstance)
+function evaluationResult=evaluateControllerFailure(topology,numberOfControllers,nodeWeights,singlePlacementInstance)
 
 evaluationResult.numberOfControllers=numberOfControllers;
 evaluationResult.failureType='Controller';
@@ -32,11 +32,7 @@ if ~exist('nodeWeights','var')
     nodeWeights=ones(1,size(topology,1));
 end
 
-if isPLC
-    distanceMatrix=topology;
-else
-    distanceMatrix=allToAllShortestPathMatrix(topology);
-end
+distanceMatrix=allToAllShortestPathMatrix(topology);
 
 if ~exist('singlePlacementInstance','var')
     maximumFailureNumber=numberOfControllers-1;

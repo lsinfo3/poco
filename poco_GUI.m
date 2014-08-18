@@ -1,7 +1,7 @@
 % POCO_GUI Provides a graphical user interface for plotting resilient 
 %   Pareto-based Optimal COntrollerplacements.
 %
-%   Copyright 2012-2013 David Hock, Stefan Geiﬂler, Fabian Helmschrott,
+%   Copyright 2012-2014 David Hock, Stefan Geiﬂler, Fabian Helmschrott,
 %                       Steffen Gebert
 %                       Chair of Communication Networks, Uni Wuerzburg   
 %
@@ -39,6 +39,7 @@ plcTopo = 0;
 currPlacement=0;
 textXaxis = '';
 textYaxis = '';
+isHierarchic=0;
 
 topologyPLC=[];
 coordinatesPLC=[];
@@ -81,6 +82,9 @@ myidx='';
 mycolors=[];
 meanlatencyvals=[];
 bestmaxidx='';
+compactViewSize = [0.05 0.04 0.72 0.95];
+fullViewSize = [0.05 0.5 0.72 0.47];
+
 
 mValues={};
 
@@ -157,11 +161,10 @@ hMainFigure    =   figure('MenuBar','none','Toolbar','none','HandleVisibility','
 hFigurePLC   =   figure('MenuBar','none','Toolbar','none','HandleVisibility','on','Name', 'PLC Live View','NumberTitle','off','Position',[0 0 400 300],'Resize','on','Color','w','Visible','off','CloseRequestFcn',@closePLCFig);
 inputFig = '';
 % For plots
-hPanelAxes2 = uipanel('Parent',hMainFigure,'Units','normalized','HandleVisibility','on','Position',[0.05 0.11 0.72 0.34],'BorderWidth',0,'BackgroundColor',get(hMainFigure,'Color'));
-hPanelAxes1 = uipanel('Parent',hMainFigure,'Units','normalized','HandleVisibility','on','Position',[0.05 0.5 0.72 0.47],'BorderWidth',0,'BackgroundColor',get(hMainFigure,'Color'));
-hPlotAxes1      =   axes('Parent', hPanelAxes1,'Units', 'normalized','HandleVisibility','on','Position',[0 0 0.98 1],'Visible','off');
+hPanelAxes2 = uipanel('Parent',hMainFigure,'Units','normalized','HandleVisibility','on','Position',[0.05 0.11 0.72 0.34],'BorderType','none','BorderWidth',0,'BackgroundColor','none');
+hPanelAxes1 = uipanel('Parent',hMainFigure,'Units','normalized','HandleVisibility','on','Position',fullViewSize,'BorderType','none','BorderWidth',0,'BackgroundColor','none');
+hPlotAxes1      =   axes('Parent', hPanelAxes1,'Units', 'normalized','HandleVisibility','on','Position',[0 0 0.98 1],'Visible','off','Box','off');
 hPlotAxes2      =   axes('Parent', hPanelAxes2,'Units', 'normalized','HandleVisibility','on','Position',[0.08 0.25 0.9 0.7],'Visible','off');
-% For plots of the Planetlab live view
 hPlotAxesPLC      =   axes('Parent', hFigurePLC,'Units', 'normalized','HandleVisibility','on','Position',[0.03 0.57 0.94 0.43],'Visible','off');
 hPlotAxesPLCbar1 = axes('Parent', hFigurePLC,'Units', 'normalized','HandleVisibility','on','Position',[0.072 0.03 0.9 0.13],'Visible','off');
 hPlotAxesPLCbar2      =   axes('Parent', hFigurePLC,'Units', 'normalized','HandleVisibility','on','Position',[0.07 0.21 0.38 0.13],'Visible','off');
@@ -177,8 +180,8 @@ hFileMenu = uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','File');
     hImportMenu = uimenu('Parent',hFileMenu,'Label','Import','HandleVisibility','on','Separator','on','Enable','off');
         hImportNodeWeightsMenu = uimenu('Parent',hImportMenu,'Label','Node weights','HandleVisibility','on','Callback',@importNodeWeights);
     hExportMenu = uimenu('Parent',hFileMenu,'HandleVisibility','on','Label','Export','Enable','off');
-        hExportImageMenu = uimenu('Parent',hExportMenu,'HandleVisibility','on','Label','Save topology as image','Callback',{@exportPlotCallback,''});
-        hExportGephiMenu = uimenu('Parent',hExportMenu,'HandleVisibility','on','Label','Save Gephi csv','Callback',@exportGephiCSV);
+        hExportImageMenuitem = uimenu('Parent',hExportMenu,'HandleVisibility','on','Label','Save topology as image','Callback',{@exportPlotCallback,''});
+        hExportGephiMenuitem = uimenu('Parent',hExportMenu,'HandleVisibility','on','Label','Save Gephi csv','Callback',@exportGephiCSV);
     hExitMenu = uimenu('Parent',hFileMenu','Label','Exit','HandleVisibility','on','Separator','on','Callback', @closeGUI);
 
 % Edit menu
@@ -230,6 +233,16 @@ hViewMenu = uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','View','
         hCheckBoxMenuBalance = uimenu('Parent',hPlotOptionsMenu,'Label','<html>Controller imbalance</html>','HandleVisibility','on','Visible','on','Callback',{@plotFiguresCallbackMenu,2},'Accelerator','2');
         hCheckBoxMenuDistCC = uimenu('Parent',hPlotOptionsMenu,'Label','<html>Max controller to controller latency</html>','HandleVisibility','on','Visible','on','Callback',{@plotFiguresCallbackMenu,3},'Accelerator','3');
         hCheckBoxMenuHeatmap = uimenu('Parent',hPlotOptionsMenu,'Label','<html>Controller-less nodes heatmap</html>','HandleVisibility','on','Visible','on','Callback',@heatmapCheckCallbackMenu,'Accelerator','5');
+        hHierarchicalShowIconsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','Use icons','HandleVisibility','on','Visible','off','Checked','off','Callback',{@hierarchicalPlotOptionCallback,3});
+        hHierarchicalShowLinksMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','Links','HandleVisibility','on','Visible','off','Checked','off','Callback',{@hierarchicalPlotOptionCallback,4});
+        hHierarchicalShowBaseStationsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','Base Stations','HandleVisibility','on','Visible','off','Checked','off','Callback',{@hierarchicalPlotOptionCallback,5});
+        hHierarchicalShowAccessNodesMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','Access Nodes','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,6});
+        hHierarchicalShowSGWlocationsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','SGW locations','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,7});
+        hHierarchicalShowSGWsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','SGWs','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,8});
+        hHierarchicalShowVirtualSGWsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','Virtual SGWs','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,9},'Enable','off');
+        hHierarchicalShowMegaEventsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','MegaEvents','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,10},'Enable','off');
+        hHierarchicalShowMegaEventResourcesMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','MegaEvent Resources','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,11},'Enable','off');
+        hHierarchicalShowNeplusMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','NE+','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,12});
     hPredefinedViewsMenu = uimenu('Parent',hViewMenu,'Label','Predefined views','HandleVisibility','on','Enable','off');
         hViewMaxLatencyMenuitem = uimenu('Parent',hPredefinedViewsMenu,'Label','<html>Max node to controller latency only</html>','HandleVisibility','on','Callback',{@plotFiguresCallbackMenu,7},'Accelerator','7');
         hViewImbalanceMenuitem = uimenu('Parent',hPredefinedViewsMenu,'Label','<html>Controller imbalance only</html>','HandleVisibility','on','Callback',{@plotFiguresCallbackMenu,8},'Accelerator','8');
@@ -239,12 +252,12 @@ hViewMenu = uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','View','
         hThemesClassicMenuitem = uimenu('Parent',hThemesMenu,'Label','Classic','HandleVisibility','on','Enable','on','Callback',{@changeThemeCallback,[1 1 1], [0 0 0]},'Checked','on','Accelerator','');
         hThemesDarkMenuitem = uimenu('Parent',hThemesMenu,'Label','Dark','HandleVisibility','on','Enable','on','Callback',{@changeThemeCallback,[0.26 0.26 0.26],[0.8 0.8 0.8]},'Accelerator','K');
     hViewModeMenu = uimenu('Parent',hViewMenu,'Label','Mode','HandleVisibility','on','Enable','on');
-        hFullViewMenuitem = uimenu('Parent',hViewModeMenu,'Label','Full','HandleVisibility','on','Callback',@fullView,'Checked','on','Accelerator','');
-        hCompactViewMenuitem = uimenu('Parent',hViewModeMenu,'Label','Compact','HandleVisibility','on','Callback',@compactView,'Accelerator','T');
+        hFullViewMenuitem = uimenu('Parent',hViewModeMenu,'Label','Full','HandleVisibility','on','Callback',@fullViewCallback,'Checked','on','Accelerator','');
+        hCompactViewMenuitem = uimenu('Parent',hViewModeMenu,'Label','Compact','HandleVisibility','on','Callback',@compactViewCallback,'Accelerator','T');
     hExtractMenuitem = uimenu('Parent',hViewMenu,'Label','Duplicate plot','HandleVisibility','on','Callback', @duplicatePlot,'Accelerator','D','Separator','on','Enable','off');
 
 % PLC Menu
-hPLCMenu      =   uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','POCO PLC','Visible','on');
+hPLCMenu      =   uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','POCO PLC','Visible','on','Enable','off');
     hInitPLCMenuitem = uimenu('Parent',hPLCMenu,'Label','Start POCO PLC','HandleVisibility','on','Callback',@InitPOCOPLC,'Accelerator','P');
     hStopPLCMenuitem = uimenu('Parent',hPLCMenu,'Label','Stop POCO PLC','HandleVisibility','on','Callback',@StopPOCOPLC,'Visible','off');
     hLoadHistPLCMenuitem = uimenu('Parent',hPLCMenu,'Label','Load history...','HandleVisibility','on','Callback',@loadPLCHistory,'Visible','off','Separator','on');
@@ -255,7 +268,21 @@ hPLCMenu      =   uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','P
     hStopPlanetlabCalcLoopMenuitem  =   uimenu('Parent',hPLCMenu,'Label','Stop Planetlab Calc Loop','HandleVisibility','on','Callback', {@stopPLCCalcCallback},'Accelerator','-','Enable','off','Visible','off');
     hFetchPlanetlabDataMenuitem  =   uimenu('Parent',hPLCMenu,'Label','Fetch Planetlab Data','HandleVisibility','on','Callback', {@fetchPLCdataCallback},'Accelerator','U','Visible','off');
 
-    
+% Hierarchical-Review Menu
+hHierarchicalMenu = uimenu('Parent',hMainFigure,'Label','SGW placement','HandleVisibility','on','Visible','on');
+    hInitHierarchicalMenuitem = uimenu('Parent',hHierarchicalMenu,'Label','Start','HandleVisibility','on','Visible','on','Callback',@initHierarchical);
+    hstopHierarchicalMenuitem = uimenu('Parent',hHierarchicalMenu,'Label','Stop','HandleVisibility','on','Visible','off','Callback',@stopHierarchicalCallback);
+    hresetHierarchicalMenuitem = uimenu('Parent',hHierarchicalMenu,'Label','Reset','HandleVisibility','on','Visible','off','Enable','off','Callback',@resetHierarchicalCallback);
+    hMegaEventsMenu = uimenu('Parent',hHierarchicalMenu,'Label','Place Mega Events','HandleVisibility','on','Visible','off','Separator','on');
+        hPlacePredefinedMenuitem = uimenu('Parent',hMegaEventsMenu,'Label','Load placements...','HandleVisibility','on','Visible','on','Callback',@loadPredefinedMegaEventsCallback);
+        hPlaceManualMenuitem = uimenu('Parent',hMegaEventsMenu,'Label','Manual','HandleVisibility','on','Visible','on','Callback',@placeMegaEventsManualCallback);
+        hPlaceAutoMenuitem = uimenu('Parent',hMegaEventsMenu,'Label','Random','HandleVisibility','on','Visible','on','Callback',@placeRandomMegaEvents);
+    hSaveMegaEventsMenuitem = uimenu('Parent',hHierarchicalMenu,'Label','Save Mega Events','HandleVisibility','on','Visible','off','Enable','off','Callback',@saveMegaEventsCallback);
+    hHierarchicalPlotMetricsMenu = uimenu('Parent',hHierarchicalMenu,'Label','Metrics','HandleVisibility','on','Visible','off','Enable','on');
+        hHierarchicalShowLatencyMenuitem = uimenu('Parent',hHierarchicalPlotMetricsMenu,'Label','Latency','HandleVisibility','on','Visible','on','Checked','off','Callback',{@hierarchicalPlotOptionCallback,1},'Enable','on');
+        hHierarchicalShowAssociationsMenuitem = uimenu('Parent',hHierarchicalPlotMetricsMenu,'Label','BS-SGW assignment','HandleVisibility','on','Visible','on','Checked','off','Callback',{@hierarchicalPlotOptionCallback,2});
+    hPlanningMenuitem = uimenu('Parent',hHierarchicalMenu,'Label','Start Planning','HandleVisibility','on','Visible','off','Enable','off','Callback',@startPlanningCallback,'Separator','on');
+
 % Help menu
 hHelpMenu = uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','Help');
     hOnlinHelpMenu = uimenu('Parent',hHelpMenu,'Label','Open online help','HandleVisibility','on','Callback', @openOnlineHelp);
@@ -263,51 +290,42 @@ hHelpMenu = uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','Help');
 
 
 % hPlotAxes1 Controls
-hLabelControllerIDs = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.91 0.17 0.02],...
-    'String','Controller IDs','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','off','FontWeight','bold');
-hLabelControllerFailureIDs = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.85 0.17 0.02],...
-    'String','Controller failure IDs','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','off','FontWeight','bold');
-hLabelNodeFailureIDs = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.79 0.17 0.02],...
-    'String','Node failure IDs','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','off','FontWeight','bold');
-hEditControllerIDs = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.88 0.14 0.03],...
-    'Style','edit','BackgroundColor','w','HandleVisibility','on','Visible','off','Callback',@inputMainFigureCallback);
-hEditControllerFailureIDs = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.82 0.14 0.03],...
-    'Style','edit','BackgroundColor','w','HandleVisibility','on','Visible','off','Callback',@inputMainFigureCallback);
-hEditNodeFailureIDs = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.76 0.14 0.03],...
-    'Style','edit','BackgroundColor','w','HandleVisibility','on','Visible','off','Callback',@inputMainFigureCallback);
+hLabelControllerIDs = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.91 0.17 0.02],'String','Controller IDs','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','on','FontWeight','bold');
+hLabelControllerFailureIDs = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.85 0.17 0.02],'String','Controller failure IDs','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','on','FontWeight','bold');
+hLabelNodeFailureIDs = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.79 0.17 0.02],'String','Node failure IDs','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','on','FontWeight','bold');
+hEditControllerIDs = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.88 0.14 0.03],'Style','edit','BackgroundColor','w','HandleVisibility','on','Visible','on','Callback',@inputMainFigureCallback);
+hEditControllerFailureIDs = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.82 0.14 0.03],'Style','edit','BackgroundColor','w','HandleVisibility','on','Visible','on','Callback',@inputMainFigureCallback);
+hEditNodeFailureIDs = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.76 0.14 0.03],'Style','edit','BackgroundColor','w','HandleVisibility','on','Visible','on','Callback',@inputMainFigureCallback);
 
-hLabelPlotOptions = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.69 0.1 0.05],...
-    'String','Show:','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','off','FontWeight','bold');
-hCheckBoxIDs = uicontrol('Parent',hMainFigure,'Units','normalized','Position',[0.78 0.69 0.15 0.03],'String','Node IDs','Style','checkbox','Value',1,'BackgroundColor',get(hMainFigure,'Color'),'HandleVisibility','on','Visible','off','Callback',@plotFiguresCallback);
-hCheckBoxDistNC = uicontrol('Parent',hMainFigure,'Units','normalized','Position',[0.78 0.65 0.17 0.03],'String','<html>Max node to controller latency</sup></html>','Style','checkbox','Value',0,'BackgroundColor',get(hMainFigure,'Color'),'HandleVisibility','on','Visible','off','Callback',@plotFiguresCallback);
-hCheckBoxBalance = uicontrol('Parent',hMainFigure,'Units','normalized','Position',[0.78 0.61 0.2 0.03],'String','<html>Controller imbalance</html>','Style','checkbox','Value',0,'BackgroundColor',get(hMainFigure,'Color'),'HandleVisibility','on','Visible','off','Callback',@plotFiguresCallback);
-hCheckBoxDistCC = uicontrol('Parent',hMainFigure,'Units','normalized','Position',[0.78 0.57 0.2 0.03],'String','<html>Max controller to controller latency</html>','Style','checkbox','Value',0,'BackgroundColor',get(hMainFigure,'Color'),'HandleVisibility','on','Visible','off','Callback',@plotFiguresCallback);
-hCheckBoxHeatmap = uicontrol('Parent',hMainFigure,'Units','normalized','Position',[0.78 0.53 0.2 0.03],'String','<html>Controller-less nodes heatmap</html>','Style','checkbox','Value',0,'BackgroundColor',get(hMainFigure,'Color'),'HandleVisibility','on','Visible','off','Callback',@heatmapCheckCallback);
-hCheckBoxTM = uicontrol('Parent',hMainFigure,'Units','normalized','Position',[0.78 0.49 0.2 0.03],'String','Node weights','Style','checkbox','Value',0,'BackgroundColor',get(hMainFigure,'Color'),'HandleVisibility','on','Visible','off','Callback',@plotFiguresCallback);
+hLabelPlotOptions = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.69 0.1 0.05],'String','Show:','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','on','FontWeight','bold');
+hCheckBoxIDs = uicontrol('Parent',hMainFigure,'Units','normalized','Position',[0.78 0.69 0.15 0.03],'String','Node IDs','Style','checkbox','Value',1,'BackgroundColor',get(hMainFigure,'Color'),'HandleVisibility','on','Visible','on','Callback',@plotFiguresCallback);
+hCheckBoxDistNC = uicontrol('Parent',hMainFigure,'Units','normalized','Position',[0.78 0.65 0.17 0.03],'String','<html>Max node to controller latency</sup></html>','Style','checkbox','Value',0,'BackgroundColor',get(hMainFigure,'Color'),'HandleVisibility','on','Visible','on','Callback',@plotFiguresCallback);
+hCheckBoxBalance = uicontrol('Parent',hMainFigure,'Units','normalized','Position',[0.78 0.61 0.2 0.03],'String','<html>Controller imbalance</html>','Style','checkbox','Value',0,'BackgroundColor',get(hMainFigure,'Color'),'HandleVisibility','on','Visible','on','Callback',@plotFiguresCallback);
+hCheckBoxDistCC = uicontrol('Parent',hMainFigure,'Units','normalized','Position',[0.78 0.57 0.2 0.03],'String','<html>Max controller to controller latency</html>','Style','checkbox','Value',0,'BackgroundColor',get(hMainFigure,'Color'),'HandleVisibility','on','Visible','on','Callback',@plotFiguresCallback);
+hCheckBoxHeatmap = uicontrol('Parent',hMainFigure,'Units','normalized','Position',[0.78 0.53 0.2 0.03],'String','<html>Controller-less nodes heatmap</html>','Style','checkbox','Value',0,'BackgroundColor',get(hMainFigure,'Color'),'HandleVisibility','on','Visible','on','Callback',@heatmapCheckCallback);
+hCheckBoxTM = uicontrol('Parent',hMainFigure,'Units','normalized','Position',[0.78 0.49 0.2 0.03],'String','Node weights','Style','checkbox','Value',0,'BackgroundColor',get(hMainFigure,'Color'),'HandleVisibility','on','Visible','on','Callback',@plotFiguresCallback);
 
 % Best placement and scenario menus
 
-hResultLabel = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.4 0.17 0.02],...
-    'String','Best placement concerning','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','off','FontWeight','bold');
-hResultPopupMenu = uicontrol('Parent', hMainFigure,'Units','normalized','Position',[0.78 0.36 0.17 0.04],'HandleVisibility','on',...
-    'String',pValues,'Style','popupmenu','FontUnits','normalized','FontSize',0.63,'Callback',@hResultPopupMenuCallback,'Visible','off','BackgroundColor',get(hMainFigure,'Color'));
+hResultLabel = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.4 0.17 0.02],'String','Best placement concerning','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','off','FontWeight','bold');
+hResultPopupMenu = uicontrol('Parent', hMainFigure,'Units','normalized','Position',[0.78 0.36 0.17 0.04],'HandleVisibility','on','String',pValues,'Style','popupmenu','FontUnits','normalized','FontSize',0.63,'Callback',@hResultPopupMenuCallback,'Visible','off','BackgroundColor',get(hMainFigure,'Color'));
 
-hScenarioLabel = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.32 0.14 0.02],...
-    'String','Scenario ','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','off','FontWeight','bold');
-hScenarioPopupMenu = uicontrol('Parent', hMainFigure,'Units','normalized','Position',[0.78 0.28 0.17 0.04],'HandleVisibility','on',...
-    'String',rbValues,'Style','popupmenu','FontUnits','normalized','FontSize',0.63,'Callback',@hScenarioPopupMenuCallback,'Visible','off','BackgroundColor',get(hMainFigure,'Color'));
+hScenarioLabel = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.78 0.32 0.14 0.02],'String','Scenario ','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','off','FontWeight','bold');
+hScenarioPopupMenu = uicontrol('Parent', hMainFigure,'Units','normalized','Position',[0.78 0.28 0.17 0.04],'HandleVisibility','on','String',rbValues,'Style','popupmenu','FontUnits','normalized','FontSize',0.63,'Callback',@hScenarioPopupMenuCallback,'Visible','off','BackgroundColor',get(hMainFigure,'Color'));
 
 % Pareto-plot controller
 hXAxisLabel = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.07 0.08 0.14 0.02],...
     'String','Value on x-axis','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','off','FontWeight','bold');
 hXAxisPopupMenu = uicontrol('Parent', hMainFigure,'Units','normalized','Position',[0.07 0.06 0.3 0.02],'HandleVisibility','on','String','','Style','popupmenu','Callback',@hAxisPopupMenuCallback,'Visible','off','BackgroundColor',get(hMainFigure,'Color'));
+hXAxisPopupMenuHierarchical = uicontrol('Parent', hMainFigure,'Units','normalized','Position',[0.07 0.06 0.3 0.02],'HandleVisibility','on','String','','Style','popupmenu','Callback',@hAxisPopupMenuHierarchicalCallback,'Visible','off','BackgroundColor',get(hMainFigure,'Color'));
 hYAxisLabel = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[0.45 0.08 0.14 0.02],...
     'String','Value on y-axis','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','off','FontWeight','bold');
 hYAxisPopupMenu = uicontrol('Parent', hMainFigure,'Units','normalized','Position',[0.45 0.06 0.3 0.02],'HandleVisibility','on','String','','Style','popupmenu','Callback',@hAxisPopupMenuCallback,'Visible','off','BackgroundColor',get(hMainFigure,'Color'));
+hYAxisPopupMenuHierarchical = uicontrol('Parent', hMainFigure,'Units','normalized','Position',[0.45 0.06 0.3 0.02],'HandleVisibility','on','String','','Style','popupmenu','Callback',@hAxisPopupMenuHierarchicalCallback,'Visible','off','BackgroundColor',get(hMainFigure,'Color'));
 
 % Status bar
 
-hStatusPanel = uipanel('Parent', hMainFigure,'Units','pixels','Position',[-10 -10 3000 30],'HandleVisibility','on','BorderType','beveledout');
+hStatusPanel = uipanel('Parent', hMainFigure,'Units','pixels','Position',[-10 -10 3000 30],'HandleVisibility','on','BorderType','beveledout','Visible','off');
 hStatusLabel = uicontrol('Parent',hStatusPanel,'Units','pixels','FontWeight','bold','HorizontalAlignment','left','Position',[12 10 1000 17],...
     'String','GUI started - Load topology to continue','Style','text','BackgroundColor',get(hStatusPanel,'BackgroundColor'));
 
@@ -317,14 +335,965 @@ set(dcobj,'Enable','on','SnapToDataVertex','on','UpdateFcn', @datacursorUpdateFc
 dcobjPLC=datacursormode(hFigurePLC);
 set(dcobjPLC,'Enable','on','SnapToDataVertex','on','UpdateFcn', @datacursorUpdateFcn);
 plotTimer=timer('TimerFcn',@plotFiguresCallback, 'StartDelay', 0.5);
-
+plotTimer2=timer('TimerFcn',@updatePlotAxes1Callback, 'StartDelay', 0.5);
+plotParetoTimer = timer('TimerFcn',@plotParetoHierarchicalCallback,'StartDelay',0.5);
 plcPlotTimer=timer('TimerFcn',@PLCPlotLoop, 'StartDelay', 0, 'Period', 3,'ExecutionMode','fixedRate');
 plcCalcTimer=timer('TimerFcn',@PLCCalcLoop, 'StartDelay', 3, 'Period', 10,'ExecutionMode','fixedSpacing');
 plcCalcNowTimer=timer('TimerFcn',@PLCCalcLoop, 'StartDelay', 0.5);
 
 %----------------------------------------------------------------------
-% After starting POCO, a topology needs to be loaded
-OpenTopologyCallback;
+
+% Controls for hierarchical topologies
+
+panelLeft = 0.78;
+buttonLeft = 0.78;
+buttonWidth = 0.2;
+hPlanningButton = uicontrol('Parent',hMainFigure,'Style','pushbutton','Units','normalized','Position',[buttonLeft 0.9 buttonWidth 0.06],'FontUnits','normalized','FontSize',0.38,'String','Start Planning','Callback',@startPlanningCallback,'Visible','off','Enable','off');
+hLayerLabel = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[panelLeft 0.65 0.17 0.02],'String','Plot options','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','off','FontWeight','bold');
+hCheckIcons = uicontrol('Parent',hMainFigure,'Style','checkbox','Units','normalized','Position',[panelLeft 0.61 0.2 0.03],'String','Use icons','Value',0,'backgroundColor',get(hMainFigure,'Color'),'Callback',@hierarchicalCheckboxCallback,'Visible','off');
+hCheckLinks = uicontrol('Parent',hMainFigure,'Style','checkbox','Units','normalized','Position',[panelLeft 0.57 0.2 0.03],'String','Links','Value',0,'backgroundColor',get(hMainFigure,'Color'),'Callback',@hierarchicalCheckboxCallback,'Visible','off');
+hCheckBaseStations = uicontrol('Parent',hMainFigure,'Style','checkbox','Units','normalized','Position',[panelLeft 0.53 0.2 0.03],'String','Base Stations','Value',0,'backgroundColor',get(hMainFigure,'Color'),'Callback',@hierarchicalCheckboxCallback,'Visible','off');
+hCheckAccessNodes = uicontrol('Parent',hMainFigure,'Style','checkbox','Units','normalized','Position',[panelLeft 0.49 0.2 0.03],'String','Access Nodes','Value',0,'backgroundColor',get(hMainFigure,'Color'),'Callback',@hierarchicalCheckboxCallback,'Visible','off');
+hCheckSGWlocations = uicontrol('Parent',hMainFigure,'Style','checkbox','Units','normalized','Position',[panelLeft 0.45 0.2 0.03],'String','SGW locations','Value',0,'backgroundColor',get(hMainFigure,'Color'),'Callback',@hierarchicalCheckboxCallback,'Visible','off');
+hCheckSGWs = uicontrol('Parent',hMainFigure,'Style','checkbox','Units','normalized','Position',[panelLeft 0.41 0.2 0.03],'String','SGWs','Value',0,'backgroundColor',get(hMainFigure,'Color'),'Callback',@hierarchicalCheckboxCallback,'Visible','off');
+hCheckVirtualSGWs = uicontrol('Parent',hMainFigure,'Style','checkbox','Units','normalized','Position',[panelLeft 0.37 0.2 0.03],'String','Virtual SGWs','Value',0,'backgroundColor',get(hMainFigure,'Color'),'Callback',@hierarchicalCheckboxCallback,'Visible','off','Enable','off');
+hCheckMegaEvents = uicontrol('Parent',hMainFigure,'Style','checkbox','Units','normalized','Position',[panelLeft 0.33 0.2 0.03],'String','MegaEvents','Value',0,'backgroundColor',get(hMainFigure,'Color'),'Callback',@hierarchicalCheckboxCallback,'Visible','off','Enable','off');
+hCheckMegaEventResources = uicontrol('Parent',hMainFigure,'Style','checkbox','Units','normalized','Position',[panelLeft 0.29 0.2 0.03],'String','MegaEvent Resources','Value',0,'backgroundColor',get(hMainFigure,'Color'),'Callback',@hierarchicalCheckboxCallback,'Visible','off','Enable','off');
+hCheckNeplus = uicontrol('Parent',hMainFigure,'Style','checkbox','Units','normalized','Position',[panelLeft 0.25 0.2 0.03],'String','NE+','Value',0,'backgroundColor',get(hMainFigure,'Color'),'Callback',@hierarchicalCheckboxCallback,'Visible','off');
+hMetricsLabel = uicontrol('Parent',hMainFigure,'Units','normalized','HorizontalAlignment','left','Position',[panelLeft 0.85 0.17 0.02],'String','Metrics','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','off','FontWeight','bold');
+hCheckLatency = uicontrol('Parent',hMainFigure,'Style','checkbox','Units','normalized','Position',[panelLeft 0.81 0.2 0.03],'String','Latency','Value',0,'backgroundColor',get(hMainFigure,'Color'),'Visible','off','Callback',@hierarchicalCheckboxCallback,'Enable','on');
+hCheckAssignment = uicontrol('Parent',hMainFigure,'Style','checkbox','Units','normalized','Position',[panelLeft 0.73 0.2 0.03],'String','BS-SGW assignment','Value',0,'backgroundColor',get(hMainFigure,'Color'),'Visible','off','Callback',@hierarchicalCheckboxCallback);
+hLabelLatency = uicontrol('Parent',hMainFigure,'Style','text','Units','normalized','Position',[panelLeft 0.77 0.12 0.03],'String','Red threshold (km)','Value',0,'backgroundColor',get(hMainFigure,'Color'),'Visible','off','Enable','on');
+hEditLatency = uicontrol('Parent',hMainFigure,'Style','edit','Units','normalized','Position',[0.89 0.78 0.06 0.03],'String','','Value',0,'backgroundColor',get(hMainFigure,'Color'),'Visible','off','Callback',@updatePlotAxes1Callback,'Enable','on');
+hBusyLabel = uicontrol('Parent',hMainFigure,'Style','text','Units','pixels','FontSize',12,'Position',[10 5 120 30],'String','','BackgroundColor',get(hMainFigure,'Color'),'Visible','on');
+
+
+mValues2={'<html><font size="2">Number of virtual SGWs</font></html>', 'numberOfControllers','Number of virtual SGWs';...
+    '<html><font size="2">Maximum latency between base stations and SGW</font></html>', 'maxLatencyN2C',['Maximum latency between',10,'base stations and SGW'];...
+    '<html><font size="2">Average latency between base stations and SGW</font></html>', 'avgLatencyN2C',['Average latency between',10,'base stations and SGW']};
+planningValues={'<html><font size="2">Maximum latency between base stations and SGW</font></html>', 'maxLatencyN2C',['Maximum latency between',10,'base stations and SGW'];...
+    '<html><font size="2">Average latency between base stations and SGW</font></html>', 'avgLatencyN2C',['Average latency between',10,'base stations and SGW']};
+
+%STRONGEST = struct;
+
+% Global variables for hierarchical topologies
+baseX=[];
+baseY=[];
+citynodes=[];
+corenodes=[];
+locX=[];
+locY=[];
+neplusnodes=[];
+neplusnodesNOSGW=[];
+newBSX=[];
+newBSY=[];
+nk=[];
+numMegaEvents=0;
+sgwnodesstatic=[];
+solutionAll=struct;
+planned=0;
+highLatency=300;
+sgwImg = '';
+neplusImg = '';
+sgwLight='';
+sgwVirtual='';
+neplusLight = '';
+% load('nodes.mat');
+% baseX=[baseX{1:end}];
+% baseY=[baseY{1:end}];
+
+
+%----------------------------------------------------------------------
+% Stops the functionality for hierarchical topologies
+
+    function stopHierarchicalCallback(hObject, eventdata)
+       stopHierarchical; 
+    end
+
+    function stopHierarchical
+        topology=[];
+        coordinates=[];
+        distanceMatrix=[];
+        corenodes=[];
+        citynodes=[];
+        neplusnodes=[];
+        neplusnodesNOSGW=[];
+        baseX=[];
+        baseY=[];
+        locX=[];
+        locY=[];
+        isHierarchic=0;
+        fullView;
+        set(hPlotAxes1,'Position',[0 0 0.98 1]);
+        fullViewSize = [0.05 0.5 0.72 0.47];
+        compactViewSize=[0.05 0.04 0.72 0.95];
+        set(hPanelAxes1,'Position',fullViewSize);
+        set(hPlanningButton,'Visible','off');
+        set(hLayerLabel,'Visible','off');
+        set(hCheckIcons,'Value',0);
+        set(hCheckIcons,'Visible','off');
+        set(hCheckLinks,'Value',0);
+        set(hCheckLinks,'Visible','off');
+        set(hCheckBaseStations,'Value',0);
+        set(hCheckBaseStations,'Visible','off');
+        set(hCheckAccessNodes,'Value',0);
+        set(hCheckAccessNodes,'Visible','off');
+        set(hCheckSGWlocations,'Value',0);
+        set(hCheckSGWlocations,'Visible','off');
+        set(hCheckSGWs,'Value',0);
+        set(hCheckSGWs,'Visible','off');
+        set(hCheckVirtualSGWs,'Value',0);
+        set(hCheckVirtualSGWs,'Visible','off');
+        set(hCheckMegaEvents,'Value',0);
+        set(hCheckMegaEvents,'Visible','off');
+        set(hCheckMegaEventResources,'Value',0);
+        set(hCheckMegaEventResources,'Visible','off');
+        set(hCheckNeplus,'Value',0);
+        set(hCheckNeplus,'Visible','off');
+        set(hMetricsLabel,'Visible','off');
+        set(hCheckLatency,'Value',0);
+        set(hCheckLatency,'Visible','off');
+        set(hCheckAssignment,'Value',0);
+        set(hCheckAssignment,'Visible','off');
+        set(hLabelLatency,'Visible','off');
+        set(hEditLatency,'Visible','off');
+        set(hInitHierarchicalMenuitem,'Visible','on');
+        set(hstopHierarchicalMenuitem,'Visible','off');
+        set(hMegaEventsMenu,'Visible','off');
+        set(hresetHierarchicalMenuitem,'Visible','off');
+        set(hPlanningMenuitem,'Visible','off');
+        set(hSaveMegaEventsMenuitem,'Visible','off');
+        set(hHierarchicalPlotMetricsMenu,'Visible','off');
+        set(hLabelControllerIDs,'Visible','on');
+        set(hLabelControllerFailureIDs,'Visible','on');
+        set(hLabelNodeFailureIDs,'Visible','on');
+        set(hEditControllerIDs,'Visible','on');
+        set(hEditControllerFailureIDs,'Visible','on');
+        set(hEditNodeFailureIDs,'Visible','on');
+        set(hLabelPlotOptions,'Visible','on');
+        set(hCheckBoxIDs,'Visible','on');
+        set(hCheckBoxDistNC,'Visible','on');
+        set(hCheckBoxBalance,'Visible','on');
+        set(hCheckBoxDistCC,'Visible','on');
+        set(hCheckBoxHeatmap,'Visible','on');
+        set(hCheckBoxTM,'Visible','on');
+        set(hPlotOptionsMenu,'Enable','off');
+        set(hYAxisPopupMenuHierarchical,'Visible','off');
+        set(hXAxisPopupMenuHierarchical,'Visible','off');
+        set(hHierarchicalShowIconsMenuitem,'Visible','off');
+        set(hHierarchicalShowLinksMenuitem,'Visible','off');
+        set(hHierarchicalShowBaseStationsMenuitem,'Visible','off');
+        set(hHierarchicalShowAccessNodesMenuitem,'Visible','off');
+        set(hHierarchicalShowSGWlocationsMenuitem,'Visible','off');
+        set(hHierarchicalShowSGWsMenuitem,'Visible','off');
+        set(hHierarchicalShowVirtualSGWsMenuitem,'Visible','off');
+        set(hHierarchicalShowMegaEventsMenuitem,'Visible','off');
+        set(hHierarchicalShowMegaEventResourcesMenuitem,'Visible','off');
+        set(hHierarchicalShowNeplusMenuitem,'Visible','off');
+        set(hCheckBoxMenuIDs,'Visible','on');
+        set(hCheckBoxMenuTM,'Visible','on');
+        set(hCheckBoxMenuDistNC,'Visible','on');
+        set(hCheckBoxMenuBalance,'Visible','on');
+        set(hCheckBoxMenuDistCC,'Visible','on');
+        set(hCheckBoxMenuHeatmap,'Visible','on');
+        set(hExportMenu,'Enable','off');
+        set(hExportGephiMenuitem,'Enable','on');
+        isBusy(0);
+        reset;
+    end
+
+%----------------------------------------------------------------------
+% Deletes all placed Mega Events and restores the initial setup of the plot
+    function resetHierarchicalCallback(hObject, eventdata)
+       resetHierarchical; 
+    end
+
+    function resetHierarchical
+        locX=[];
+        locY=[];
+        newBSX=[];
+        newBSY=[];
+        nk=[];
+        numMegaEvents=0;
+        solution=struct;
+        solutionAll=struct;
+        planned=0;
+        highLatency=300;
+        set(hViewMenu,'Enable','on');
+        set(hCheckLatency,'Value',0);
+        axes(hPlotAxes2);
+        cla;
+        box off;
+        set(gca,'Visible','off');
+        compactView;
+        set(hCheckBaseStations,'Value',1);
+        set(hHierarchicalShowBaseStationsMenuitem,'Checked','on');
+        set(hCheckAccessNodes,'Value',1);
+        set(hHierarchicalShowAccessNodesMenuitem,'Checked','on');
+        set(hCheckAssignment,'Value',0);
+        set(hHierarchicalShowAssociationsMenuitem,'Checked','off');
+        set(hCheckLatency,'Value',0);
+        set(hHierarchicalShowLatencyMenuitem,'Checked','off');
+        set(hCheckSGWlocations,'Value',0);
+        set(hHierarchicalShowSGWlocationsMenuitem,'Checked','off');
+        set(hCheckNeplus,'Value',0);
+        set(hHierarchicalShowNeplusMenuitem,'Checked','off');
+        set(hCheckIcons,'Value',0);
+        set(hHierarchicalShowIconsMenuitem,'Checked','off');
+        set(hCheckSGWs,'Value',0);
+        set(hHierarchicalShowSGWsMenuitem,'Checked','off');
+        set(hPanelAxes1,'Visible','on');
+        set(hCheckLinks,'Value',1);
+        set(hHierarchicalShowLinksMenuitem,'Checked','on');       
+        set(hSaveMegaEventsMenuitem,'Enable','off');
+        set(hPlanningButton,'Enable','off');
+        set(hPlanningMenuitem,'Enable','off');
+        if ~isempty(topology)
+            resetMegaEvents;
+        end
+    end 
+
+%----------------------------------------------------------------------
+% Starts the functionality for hierarchical topologies
+    function initHierarchical(hObject, eventdata)
+        reset;
+        isHierarchic=1;
+        set(hPlotAxes1,'Position',[0 0.02 1 0.98]);
+        set(hLabelControllerIDs,'Visible','off');
+        set(hLabelControllerFailureIDs,'Visible','off');
+        set(hLabelNodeFailureIDs,'Visible','off');
+        set(hEditControllerIDs,'Visible','off');
+        set(hEditControllerFailureIDs,'Visible','off');
+        set(hEditNodeFailureIDs,'Visible','off');
+        set(hLabelPlotOptions,'Visible','off');
+        set(hCheckBoxIDs,'Visible','off');
+        set(hCheckBoxDistNC,'Visible','off');
+        set(hCheckBoxBalance,'Visible','off');
+        set(hCheckBoxDistCC,'Visible','off');
+        set(hCheckBoxHeatmap,'Visible','off');
+        set(hCheckBoxTM,'Visible','off');
+        fullViewSize = [0.2 0.5 0.42 0.5];
+        compactViewSize=[0.1 0.04 0.6 0.98];
+        set(hPanelAxes1,'Position',fullViewSize);
+        set(hPlanningButton,'Visible','on');
+        set(hLayerLabel,'Visible','on');
+        set(hCheckIcons,'Visible','on');
+        set(hCheckLinks,'Visible','on');
+        set(hCheckBaseStations,'Visible','on');
+        set(hCheckAccessNodes,'Visible','on');
+        set(hCheckSGWlocations,'Visible','on');
+        set(hCheckSGWs,'Visible','on');
+        set(hCheckVirtualSGWs,'Visible','on');
+        set(hCheckMegaEvents,'Visible','on');
+        set(hCheckMegaEventResources,'Visible','on');
+        set(hCheckNeplus,'Visible','on');
+        set(hMetricsLabel,'Visible','on');
+        set(hCheckLatency,'Visible','on');
+        set(hCheckAssignment,'Visible','on');
+        set(hLabelLatency,'Visible','on');
+        set(hEditLatency,'Visible','on');
+        set(hInitHierarchicalMenuitem,'Visible','off');
+        set(hstopHierarchicalMenuitem,'Visible','on');
+        set(hMegaEventsMenu,'Visible','on');
+        set(hresetHierarchicalMenuitem,'Visible','on');
+        set(hPlanningMenuitem,'Visible','on');
+        set(hSaveMegaEventsMenuitem,'Visible','on');
+        set(hHierarchicalPlotMetricsMenu,'Visible','on');
+        resetHierarchical;
+        set(hHierarchicalShowIconsMenuitem,'Visible','on');
+        set(hHierarchicalShowLinksMenuitem,'Visible','on');
+        set(hHierarchicalShowBaseStationsMenuitem,'Visible','on');
+        set(hHierarchicalShowAccessNodesMenuitem,'Visible','on');
+        set(hHierarchicalShowSGWlocationsMenuitem,'Visible','on');
+        set(hHierarchicalShowSGWsMenuitem,'Visible','on');
+        set(hHierarchicalShowVirtualSGWsMenuitem,'Visible','on');
+        set(hHierarchicalShowMegaEventsMenuitem,'Visible','on');
+        set(hHierarchicalShowMegaEventResourcesMenuitem,'Visible','on');
+        set(hHierarchicalShowNeplusMenuitem,'Visible','on');
+        set(hCheckBoxMenuIDs,'Visible','off');
+        set(hCheckBoxMenuTM,'Visible','off');
+        set(hCheckBoxMenuDistNC,'Visible','off');
+        set(hCheckBoxMenuBalance,'Visible','off');
+        set(hCheckBoxMenuDistCC,'Visible','off');
+        set(hCheckBoxMenuHeatmap,'Visible','off'); 
+        set(hPlotOptionsMenu,'Enable','on');
+        set(hExportMenu,'Enable','on');
+        set(hExportGephiMenuitem,'Enable','off');
+        isBusy(1);
+        sgwImg = imread('sgw.png');
+        neplusImg = imread('neplus.png');
+        sgwLight=imread('sgw_light.png');
+        sgwVirtual=imread('virtual_sgw.png');
+        neplusLight = imread('neplus_light.png');
+        compactView;
+        set(gcf,'Pointer','watch');
+        if isempty(topology)
+%            [STRONGEST]=loadSTRONGEST('topologies/STRONGEST_coreonly.mat');
+             [coordinates, topology, citynodes, sgwnodesstatic, neplusnodes, neplusnodesNOSGW, baseX, baseY, corenodes, distanceMatrix] = loadHierarchical('topologies/hierarchicalTopology.mat');
+%             coordinates=STRONGEST.coordinates;
+%             distanceMatrix=STRONGEST.distanceMatrix;
+%             topology=STRONGEST.topology;
+        end
+        plotLinks;
+        plotBaseStations(0);
+        plotAccessNodes(0,0);
+        set(hThemesMenu,'Enable','on');
+        set(gcf,'Pointer','arrow');
+        isBusy(0);
+    end
+
+%----------------------------------------------------------------------
+% Updates the plot an the plot option menu for hierarchical
+% topologies when an option checkbox is selected
+    function hierarchicalCheckboxCallback(hObject, eventdata)
+        updatePlotAxes1;
+        updateHierarchicalPlotOptions;
+    end
+
+%----------------------------------------------------------------------
+% Updates the plot option menu for hierarchical topologies according
+% to the plot option checkboxes
+    function updateHierarchicalPlotOptions
+        checkValue={'off','on'};
+        set(hHierarchicalShowLatencyMenuitem,'Checked',checkValue{get(hCheckLatency,'Value')+1});
+        set(hHierarchicalShowAssociationsMenuitem,'Checked',checkValue{get(hCheckAssignment,'Value')+1});
+        set(hHierarchicalShowIconsMenuitem,'Checked',checkValue{get(hCheckIcons,'Value')+1});
+        set(hHierarchicalShowLinksMenuitem,'Checked',checkValue{get(hCheckLinks,'Value')+1});
+        set(hHierarchicalShowBaseStationsMenuitem,'Checked',checkValue{get(hCheckBaseStations,'Value')+1});
+        set(hHierarchicalShowAccessNodesMenuitem,'Checked',checkValue{get(hCheckAccessNodes,'Value')+1});
+        set(hHierarchicalShowSGWlocationsMenuitem,'Checked',checkValue{get(hCheckSGWlocations,'Value')+1});
+        set(hHierarchicalShowSGWsMenuitem,'Checked',checkValue{get(hCheckSGWs,'Value')+1});
+        set(hHierarchicalShowVirtualSGWsMenuitem,'Checked',checkValue{get(hCheckVirtualSGWs,'Value')+1});
+        set(hHierarchicalShowMegaEventsMenuitem,'Checked',checkValue{get(hCheckMegaEvents,'Value')+1});
+        set(hHierarchicalShowMegaEventResourcesMenuitem,'Checked',checkValue{get(hCheckMegaEventResources,'Value')+1});
+        set(hHierarchicalShowNeplusMenuitem,'Checked',checkValue{get(hCheckNeplus,'Value')+1});
+    end
+
+%----------------------------------------------------------------------
+% Updates the plot an the plot option checkboxes for hierarchical
+% topologies when an option in the menu is selected
+    function hierarchicalPlotOptionCallback(hObject, eventdata, k)
+        updateHierarchicalCheckBoxes(k);
+        updatePlotAxes1; 
+        updateHierarchicalPlotOptions;
+    end
+
+%----------------------------------------------------------------------
+% Updates the plot option checkboxes for hierarchical topologies according
+% to the plot option menu
+    function updateHierarchicalCheckBoxes(k)
+        switch k
+            case 1
+                set(hCheckLatency,'Value',~get(hCheckLatency,'Value'));
+            case 2
+                set(hCheckAssignment,'Value',~get(hCheckAssignment,'Value'));
+            case 3
+                set(hCheckIcons,'Value',~get(hCheckIcons,'Value'));
+            case 4
+                set(hCheckLinks,'Value',~get(hCheckLinks,'Value'));
+            case 5
+                set(hCheckBaseStations,'Value',~get(hCheckBaseStations,'Value'));
+            case 6
+                set(hCheckAccessNodes,'Value',~get(hCheckAccessNodes,'Value'));
+            case 7
+                set(hCheckSGWlocations,'Value',~get(hCheckSGWlocations,'Value'));
+            case 8
+                set(hCheckSGWs,'Value',~get(hCheckSGWs,'Value'));
+            case 9
+                set(hCheckVirtualSGWs,'Value',~get(hCheckVirtualSGWs,'Value'));
+            case 10
+                set(hCheckMegaEvents,'Value',~get(hCheckMegaEvents,'Value'));
+            case 11
+                set(hCheckMegaEventResources,'Value',~get(hCheckMegaEventResources,'Value'));
+            case 12
+                set(hCheckNeplus,'Value',~get(hCheckNeplus,'Value'));
+        end
+    end
+
+%----------------------------------------------------------------------
+% Disables or enables the plot option controls during the plot is being 
+% updated
+    function disableOptions(bool)
+        value={'on','off'};
+        set(hCheckLatency,'Enable',value{bool+1});
+        set(hEditLatency,'Enable',value{bool+1});
+        set(hCheckAssignment,'Enable',value{bool+1});
+        set(hCheckIcons,'Enable',value{bool+1});
+        set(hCheckLinks,'Enable',value{bool+1});
+        set(hCheckBaseStations,'Enable',value{bool+1});
+        set(hCheckAccessNodes,'Enable',value{bool+1});
+        set(hCheckSGWlocations,'Enable',value{bool+1});
+        set(hCheckSGWs,'Enable',value{bool+1});
+        if ~isempty(locX)
+            if planned
+                set(hCheckVirtualSGWs,'Enable',value{bool+1});
+            end
+            set(hCheckMegaEvents,'Enable',value{bool+1});
+            set(hCheckMegaEventResources,'Enable',value{bool+1});
+        end
+        set(hCheckNeplus,'Enable',value{bool+1});
+    end
+
+%----------------------------------------------------------------------
+% Updates the topology plot according to the set plot options
+
+    function updatePlotAxes1Callback(hObject, eventdata)
+       updatePlotAxes1; 
+    end
+
+    function updatePlotAxes1
+        disableOptions(1);
+        isBusy(1);
+        axes(hPlotAxes1);
+        cla;
+        box off;
+        hold on;
+        latency=get(hCheckLatency,'Value');
+        assignment=get(hCheckAssignment,'Value');
+        showIcons=get(hCheckIcons,'Value');
+        showLinks=get(hCheckLinks,'Value');
+        showBaseStations=get(hCheckBaseStations,'Value');
+        showAccessNodes=get(hCheckAccessNodes,'Value');
+        showSGWlocations=get(hCheckSGWlocations,'Value');
+        showSGWs=get(hCheckSGWs,'Value');
+        showVirtualSGWs=get(hCheckVirtualSGWs,'Value');
+        showMegaEvents=get(hCheckMegaEvents,'Value');
+        showMegaEventResources=get(hCheckMegaEventResources,'Value');
+        showNEplus=get(hCheckNeplus,'Value');
+        set(gcf,'Pointer','watch');
+        if showLinks
+            plotLinks;
+        end
+        if showBaseStations
+            plotBaseStations(assignment);
+        end
+        if showAccessNodes
+            plotAccessNodes(assignment,latency);
+        end
+        if showSGWlocations
+            plotSGWlocations;
+        end
+        if showNEplus
+            plotNeplus(showIcons);
+        end
+        if showVirtualSGWs
+            plotVirtualSGWs(nk,showIcons);
+        end
+        if showMegaEventResources
+            plotMegaEventResources(assignment,latency);
+        end
+        if showSGWs
+           plotSGWs(assignment,showIcons);
+        end
+        if showMegaEvents
+           plotMegaEvents;
+        end
+        set(gcf,'Pointer','arrow');
+        isBusy(0);
+        disableOptions(0);
+    end
+
+%----------------------------------------------------------------------
+% Sets a label to show the user the programm is busy
+    function isBusy(value)
+        if value
+            set(hBusyLabel,'String','Working...');
+        else
+            set(hBusyLabel,'String','');
+        end
+    end
+
+%----------------------------------------------------------------------
+% Deletes all currently placed Mega Events
+    function resetMegaEvents
+        isBusy(1);
+        axes(hPlotAxes1);
+        cla;
+        box off;
+        hold on;
+        locX=[];
+        locY=[];
+        planned=0;
+        set(hCheckVirtualSGWs,'Enable','off');
+        set(hCheckVirtualSGWs,'Value',0);
+        set(hCheckMegaEvents,'Enable','off');
+        set(hCheckMegaEvents,'Value',0);
+        set(hCheckMegaEventResources,'Value',0);
+        set(hCheckMegaEventResources,'Enable','off');
+        set(hHierarchicalShowMegaEventResourcesMenuitem,'Enable','off');
+        set(hHierarchicalShowMegaEventResourcesMenuitem,'Checked','off');
+        set(hHierarchicalShowMegaEventsMenuitem,'Enable','off');
+        set(hHierarchicalShowMegaEventsMenuitem,'Checked','off');
+        set(hHierarchicalShowVirtualSGWsMenuitem,'Checked','off');
+        set(hHierarchicalShowVirtualSGWsMenuitem,'Enable','off');
+        updatePlotAxes1;
+        set(hXAxisLabel,'Visible','off');
+        set(hYAxisLabel,'Visible','off');
+        set(hYAxisPopupMenuHierarchical,'Visible','off');
+        set(hXAxisPopupMenuHierarchical,'Visible','off');
+        set(hYAxisPopupMenuHierarchical,'String','');
+        set(hXAxisPopupMenuHierarchical,'String','');
+        planned=0;
+        set(hCheckVirtualSGWs,'Enable','off');
+        set(hCheckVirtualSGWs,'Value',0);
+        set(hCheckMegaEvents,'Enable','off');
+        set(hCheckMegaEvents,'Value',0);
+        set(hCheckMegaEventResources,'Value',0);
+        set(hCheckMegaEventResources,'Enable','off');
+        set(hHierarchicalShowMegaEventResourcesMenuitem,'Enable','off');
+        set(hHierarchicalShowMegaEventResourcesMenuitem,'Checked','off');
+        set(hHierarchicalShowMegaEventsMenuitem,'Enable','off');
+        set(hHierarchicalShowMegaEventsMenuitem,'Checked','off');
+        set(hHierarchicalShowVirtualSGWsMenuitem,'Checked','off');
+        set(hHierarchicalShowVirtualSGWsMenuitem,'Enable','off');
+        isBusy(0);
+    end
+
+%----------------------------------------------------------------------
+% Places ten Mega Events randomly on the topology
+    function placeRandomMegaEvents(hObject, event)
+        set(hPlanningButton,'Enable','on');
+        resetMegaEvents;
+        set(hPlanningMenuitem,'Enable','on');
+        numMegaEvents=10;
+        xmin=min(coordinates(:,1))
+        xmax=max(coordinates(:,1))
+        ymin=min(coordinates(:,2))
+        ymax=max(coordinates(:,2))
+        locX=rand(1,numMegaEvents*3)*(xmax-xmin)+xmin;
+        locY=rand(1,numMegaEvents*3)*(ymax-ymin)+ymin;
+        [locX,locY]=advancedFilterPoints(coordinates,locX,locY,1000,30);
+        locX=locX(1:min(numMegaEvents,length(locX)));
+        locY=locY(1:min(numMegaEvents,length(locY)));
+        [newBSX,newBSY]=createBaseStations([locX;locY],4000,10);
+        [newBSX,newBSY]=advancedFilterPoints(coordinates,newBSX,newBSY,2000,5);
+        plotMegaEvents;
+        calculateMegaEventResources;
+    end
+
+%----------------------------------------------------------------------
+% Saves the currently places Mega Events.
+
+    function saveMegaEventsCallback(hObject, eventdata)
+        if ~isempty(numMegaEvents)
+            file = uiputfile('*.megaevents.mat');
+            saveMegaEvents(file);
+            set(hMainFigure,'Name',sprintf('POCO - %s',file));
+        end
+    end
+
+    function saveMegaEvents(file)
+       save(file, '-mat','numMegaEvents','newBSX','newBSY','locX','locY') 
+    end    
+ 
+%----------------------------------------------------------------------
+% Loads a file containing a predefined Mega Event placement
+    function loadPredefinedMegaEventsCallback(hObject, eventdata)
+        [filename, pathname] = uigetfile({'*.megaevents.mat','Mega Event placements (*.megaevents.mat)'},'Please select a valid Mega Event placements file');
+        file = fullfile(pathname, filename);
+        if ~isequal(filename, 0)
+            loadPredefinedMegaEvents(file);
+        else
+            return;
+        end
+    end
+
+    function loadPredefinedMegaEvents(file)
+        resetMegaEvents;
+        set(hPlanningMenuitem,'Enable','on');
+        set(hPlanningButton,'Enable','on');
+        [locX,locY,newBSX,newBSY,numMegaEvents] = loadMegaEvents(file);
+        plotMegaEvents;
+        calculateMegaEventResources;
+    end
+
+    function [locX,locY,newBSX,newBSY,numMegaEvents] = loadMegaEvents(filename)
+        if exist(filename,'file')
+            load(filename);
+        end
+    end
+
+%----------------------------------------------------------------------
+% Loads the hierarchical topology
+    function [coordinates, topology, citynodes, sgwnodesstatic, neplusnodes, neplusnodesNOSGW, baseX, baseY, corenodes, distanceMatrix] = loadHierarchical(filename)
+        if exist(filename,'file')
+            load(filename);
+        end
+    end
+
+    function [STRONGEST] = loadSTRONGEST(filename)
+        if exist(filename,'file')
+            load(filename);
+        end
+    end
+
+%----------------------------------------------------------------------
+% Opens a dialog to ask the user how many Mega Events he wants to place
+
+    function placeMegaEventsManualCallback(hObject, eventdata)
+        inputFig = figure('MenuBar','none','Toolbar','none','HandleVisibility','on','Name', 'Place Mega Events','NumberTitle','off','Position', [(screensize(3)/2 - 150), (screensize(4)/2 - 70), 300, 150],'Resize','on','Color','w');
+        hLabelHead = uicontrol('Parent',inputFig,'Units','pixel','HorizontalAlignment','left','Position',[0 100 300 50],...
+            'String','Please insert the number of Mega Events you want to place.','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','on','FontWeight','bold');
+        hLabelNumEvents = uicontrol('Parent',inputFig,'Units','pixel','HorizontalAlignment','left','Position',[0 80 150 30],...
+            'String','Number of Mega Events:','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','on','FontWeight','bold');
+        hEditNumEvents = uicontrol('Parent',inputFig,'Units','pixel','HorizontalAlignment','left','Position',[150 90 150 20],...
+            'Style','edit','BackgroundColor','w','HandleVisibility','on','Visible','on','String','3');
+        hButtonSave = uicontrol('Parent',inputFig,'Units','pixel','Position',[40 10 100 30],'HandleVisibility','on','Visible','on','String','Place Mega Events','Style','pushbutton','HorizontalAlignment','right','Callback',{@checkInputNum,hEditNumEvents,inputFig});
+        hButtonCancel = uicontrol('Parent',inputFig,'Units','pixel','Position',[160 10 100 30],'HandleVisibility','on','Visible','on','String','Cancel','Style','pushbutton','HorizontalAlignment','right','Callback',{@closeFig,inputFig});
+        
+        function checkInputNum(hObject, eventdata,hEditNumEvents,inputFig)
+            if isnumeric(str2num(get(hEditNumEvents,'String'))) && ~isempty(str2num(get(hEditNumEvents,'String')))
+                placeMegaEventsManual(hEditNumEvents,inputFig);
+            else
+                errordlg('Invalid input! Please insert a number!','Error! Invalid input!');
+            end
+        end
+    end
+
+%----------------------------------------------------------------------
+% Lets the user choose places for Mega Events in the network area
+    function placeMegaEventsManual(inputNumEvents, oldInputFig)
+        resetMegaEvents;
+        numMegaEvents = get(inputNumEvents,'String');
+        close(oldInputFig);
+        axes(hPlotAxes1);
+        hold on;
+        uiwait(helpdlg('Please choose the places for the Mega Events on the map','Place Mega Events manual'));
+        for i=1:str2num(numMegaEvents)
+            [locXtmp locYtmp] = ginput(1);
+            locX(i)=locXtmp;
+            locY(i)=locYtmp;
+            plotMegaEvents;
+        end
+        if ~isempty(locX)
+            locX=locX(1:min(numMegaEvents,length(locX)));
+            locY=locY(1:min(numMegaEvents,length(locY)));
+            [newBSX,newBSY]=createBaseStations([locX;locY],4000,10);
+            [newBSX,newBSY]=advancedFilterPoints(coordinates,newBSX,newBSY,2000,5);
+            calculateMegaEventResources;
+            set(hPlanningButton,'Enable','on');
+        end
+    end
+ 
+
+%----------------------------------------------------------------------
+%
+    function startPlanningCallback(hObject, eventdata)
+        planned=1;
+        set(hXAxisPopupMenuHierarchical,'String',mValues2(1:3,1));
+        set(hYAxisPopupMenuHierarchical,'String',mValues2(1:3,1));
+        set(hXAxisPopupMenuHierarchical,'Value',1);
+        set(hYAxisPopupMenuHierarchical,'Value',2);
+        panelAxis1Pos = get(hPanelAxes1,'Position');
+        if panelAxis1Pos(4) < 0.8
+            set(hXAxisLabel,'Visible','on');
+            set(hYAxisLabel,'Visible','on');
+            set(hXAxisPopupMenuHierarchical,'Visible','on');
+            set(hYAxisPopupMenuHierarchical,'Visible','on');
+        end
+        valuex=char(mValues2{get(hXAxisPopupMenuHierarchical,'Value'),2});
+        valuey=char(mValues2{get(hYAxisPopupMenuHierarchical,'Value'),2});
+        updatePlotAxes1;
+        plotVirtualSGWs(nk,get(hCheckIcons,'Value'));  
+        start(plotParetoTimer);
+    end
+
+%----------------------------------------------------------------------
+% Plots the new Virtual SGWs
+    function plotVirtualSGWs(idx,icons)
+        isBusy(1);
+        axes(hPlotAxes1);
+        set(hHierarchicalShowVirtualSGWsMenuitem,'Enable','on');
+        set(hCheckVirtualSGWs,'Enable','on');
+        set(hLabelLatency,'Enable','on');
+        set(hCheckLatency,'Enable','on');
+        set(hEditLatency,'Enable','on');
+        set(hCheckVirtualSGWs,'Value',1);
+        set(hCheckMegaEventResources,'Value',1);
+        sgwnodes=neplusnodesNOSGW(idx);
+        [imgH, imgW, tildevar] = size(sgwVirtual);
+        if icons
+            for i=1:length(sgwnodes)
+                image([(coordinates(sgwnodes(i),1)-(imgW*10)/2 +500) (coordinates(sgwnodes(i),1)+(imgW*10)/2 - 500)],[coordinates(sgwnodes(i),2)+(imgH*10)/2 coordinates(sgwnodes(i),2)-(imgH*10)/2],sgwVirtual,'Parent',gca);
+            end
+        end
+        mycolors=repmat(hsv(4),ceil(length(sgwnodes)/4),1);
+        for i=1:length(sgwnodes)      
+        	plot(coordinates(sgwnodes(i),1),coordinates(sgwnodes(i),2),'o','MarkerFaceColor',mycolors(i,:),'MarkerSize',14,'Color',darken(mycolors(i,:)),'LineWidth',2,'LineSmoothing','off','Parent',gca)
+        end
+        isBusy(0);
+    end
+
+%----------------------------------------------------------------------
+% Determines the Access Nodes which are affected by the new Base Stations
+% and the new Virtual SGWs which are needed
+    function calculateMegaEventResources
+        assignmentIdx=calculateBaseStationAssignment(coordinates,citynodes,newBSX,newBSY);
+        mycolors=repmat(hsv(10),ceil(length(citynodes)/10),1);
+        if matlabVersion < 2013
+        	dist=distanceMatrix(citynodes(unique(assignmentIdx)),neplusnodesNOSGW);
+        else
+        	dist=distanceMatrix(citynodes(unique(assignmentIdx,'legacy')),neplusnodesNOSGW);
+        end
+        a=1;
+        k=0;
+        solutionAll=repmat(struct('numberOfControllers',[],'failureType','','nk',[],'maxNumberOfControllerlessNodes',[],'avgLatencyN2C',[],'maxLatencyN2C',[],'avgLatencyC2C',[],'maxLatencyC2C',[],'controllerImbalance',[]),1,4);
+        while a > 0.3 && k<4
+        	k=k+1;
+            solution=evaluateSingleInstanceHierarchical(dist,k);
+            solutionAll(k)=solution;
+            solutionAll(k).numberOfControllers= k*ones(size(solution.maxLatencyN2C));
+            [a,b]=min(solution.maxLatencyN2C);
+        end
+        tmp=0;
+        if b > max(size(solutionAll(1).nk))
+         	tmp=b+max(size(solutionAll(1).nk));
+            if tmp > max(size(solutionAll(2).nk))
+                tmp=tmp+max(size(solutionAll(2).nk));
+                if tmp > max(size(solutionAll(3).nk))
+                	tmp=tmp+max(size(solutionAll(3).nk));
+                end
+            end
+        end
+        currPlacement = tmp;
+        nk=solution.nk(b,:);
+        plotMegaEventResources(get(hCheckAssignment,'Value'),get(hCheckLatency,'Value'));
+    end
+
+%----------------------------------------------------------------------
+% Plots the Mega Event Resources
+    function plotMegaEventResources(assignment, latency)
+        if ~isempty(str2num(get(hEditLatency,'String')))
+            highLatency=str2num(get(hEditLatency,'String'));
+        else
+           set(hEditLatency,'String','300'); 
+        end
+    	x=newBSX;
+    	y=newBSY;
+    	set(hCheckMegaEventResources,'Enable','on');
+    	set(hCheckMegaEventResources,'Value',1);
+        set(hHierarchicalShowMegaEventResourcesMenuitem,'Enable','on');
+        set(hHierarchicalShowMegaEventResourcesMenuitem,'Checked','on');
+        sgwnodes=neplusnodesNOSGW(nk);
+        assignmentIdx=calculateBaseStationAssignment(coordinates,citynodes,x,y);
+        [mindiff assignmentIdxNESGW]=calculateBaseStationAssignmentTransport(distanceMatrix,citynodes,sgwnodes);
+        mycolors=repmat('y',length(sgwnodes),1);
+        mycolorsstatic=[0.6 0.6 0.6];
+         mycolorsstatic=repmat(mycolorsstatic,ceil(length(sgwnodesstatic)/size(mycolorsstatic,1)),1);
+        if assignment
+            mycolors=repmat(hsv(4),ceil(length(sgwnodes)/3),1);
+        end
+        for i=1:length(sgwnodes)
+            neplusAssignedToThisSGW=find(assignmentIdxNESGW==i);
+            if latency
+                diffNESGW=mindiff(find(assignmentIdxNESGW==i));                
+            end
+            for j=1:length(neplusAssignedToThisSGW)
+                if ~isempty(find(assignmentIdx==neplusAssignedToThisSGW(j),1))
+                    if latency
+                        color=repmat('k',length(sgwnodes),1);
+                        color2=mycolorsstatic;
+                        if assignment
+                            color=mycolors;
+                            color2=mycolors;
+                        end
+                        plot(x(assignmentIdx==neplusAssignedToThisSGW(j)),y(assignmentIdx==neplusAssignedToThisSGW(j)),'.','Color',color2(i,:),'MarkerFaceColor',color2(i,:));
+                        plot(coordinates(citynodes(neplusAssignedToThisSGW(j)),1),coordinates(citynodes(neplusAssignedToThisSGW(j)),2),'d','Color',color(i,:),'MarkerFaceColor',getgreenyellowred(diffNESGW(j)/(highLatency*5)))
+                    else
+                        plot(x(assignmentIdx==neplusAssignedToThisSGW(j)),y(assignmentIdx==neplusAssignedToThisSGW(j)),'.','Color',mycolors(i,:),'MarkerFaceColor',mycolors(i,:));
+                        plot(coordinates(citynodes(neplusAssignedToThisSGW(j)),1),coordinates(citynodes(neplusAssignedToThisSGW(j)),2),'dk','MarkerFaceColor',mycolors(i,:))
+                    end
+                end
+            end
+        end
+    end
+
+%----------------------------------------------------------------------
+% Plots the pareto plot for hierarchical topologies
+
+    function plotParetoHierarchicalCallback(hObject, eventdata)
+        plotParetoHierarchical;
+    end
+
+    function plotParetoHierarchical
+        axes(hPlotAxes2);
+        cla;
+        set(gca,'Visible','on');
+        hold on;
+        plotPareto([solutionAll.(valuex)],[solutionAll.(valuey)],'ShowSelectedIdx',currPlacement,'Parent',hPlotAxes2,'ShowMeanValues','off');
+        xlabel(char(mValues2(get(hXAxisPopupMenuHierarchical,'Value'),3)));
+        ylabel(char(mValues2(get(hYAxisPopupMenuHierarchical,'Value'),3)));
+    end
+
+    function hAxisPopupMenuHierarchicalCallback(hObject, eventdata)
+        valuex=char(mValues2{get(hXAxisPopupMenuHierarchical,'Value'),2});
+        valuey=char(mValues2{get(hYAxisPopupMenuHierarchical,'Value'),2});
+        plotParetoHierarchical;
+    end
+
+%----------------------------------------------------------------------
+% Plots the links of the hierarchical topology
+
+    function plotLinks
+        axes(hPlotAxes1);
+        box off;
+        hold on;
+        [rlink,clink]=find(topology~=inf);
+        beginx=coordinates(rlink,1);
+        beginy=coordinates(rlink,2);
+        endx=coordinates(clink,1);
+        endy=coordinates(clink,2);
+        for m=1:length(beginx)
+            plot([beginx(m) endx(m)],[beginy(m) endy(m)],'Color',[0.6 0.6 0.6],'LineWidth',1, 'LineSmoothing','off');
+        end
+        set(hCheckLinks,'Value',1);
+        set(hHierarchicalShowLinksMenuitem,'Checked','on');
+        set(gca,'Visible','off');
+        xlim([-0.04e5 .7e5])
+        ylim([-0.03e5 1e5]) 
+    end
+
+%----------------------------------------------------------------------
+% Plots the access nodes of the hierarchical topology
+
+    function plotAccessNodes(assignment,latency)
+        if ~isempty(str2num(get(hEditLatency,'String')))
+            highLatency=str2num(get(hEditLatency,'String'));
+        else
+           set(hEditLatency,'String','300'); 
+        end
+        k=1;
+        mycolorsstatic=[0.6 0.6 0.6];
+        if assignment || latency
+            k=length(sgwnodesstatic);
+            [mindiff assignmentIdxNESGW]=calculateBaseStationAssignmentTransport(distanceMatrix,citynodes,sgwnodesstatic);
+            colorsNew=hsv(k);
+            mycolorsstatic(1:k,:)=colorsNew(1:k,:);
+        end
+        for i=1:k
+            neplusAssignedToThisSGW=[1:length(citynodes)];
+            color=mycolorsstatic(i,:);
+            if assignment || latency
+                neplusAssignedToThisSGW=find(assignmentIdxNESGW==i);
+            end
+             if latency
+                 diffNESGW=mindiff(find(assignmentIdxNESGW==i));
+                 for j=1:length(neplusAssignedToThisSGW);
+                     color=getgreenyellowred(diffNESGW(j)/(highLatency*1e6));
+                     plot(coordinates(citynodes(neplusAssignedToThisSGW(j)),1),coordinates(citynodes(neplusAssignedToThisSGW(j)),2),'dk','MarkerSize',8,'MarkerFaceColor',getgreenyellowred(diffNESGW(j)/(highLatency*5)),'LineSmoothing','off');
+                 end
+             else
+                plot(coordinates(citynodes(neplusAssignedToThisSGW)',1),coordinates(citynodes(neplusAssignedToThisSGW)',2),'dk','MarkerSize',8,'MarkerFaceColor',color,'LineSmoothing','off')
+             end     
+        end
+        set(hCheckAccessNodes,'Value',1);
+        set(hHierarchicalShowAccessNodesMenuitem,'Checked','on');
+        set(hEditLatency,'Enable','on');
+    end
+ 
+%----------------------------------------------------------------------
+% Plots the base stations of the hierarchical topology
+
+    function plotBaseStations(assignment)
+        k=1;
+        mycolorsstatic=[0.6 0.6 0.6];
+        set(hCheckBaseStations,'Value',1);
+        set(hHierarchicalShowBaseStationsMenuitem,'Checked','on');
+        if assignment
+            k = length(sgwnodesstatic);
+            assignmentIdxStatic=calculateBaseStationAssignment(coordinates,citynodes,baseX,baseY);
+            [mindiff assignmentIdxNESGW]=calculateBaseStationAssignmentTransport(distanceMatrix,citynodes,sgwnodesstatic);
+            colorsNew=hsv(k);
+            mycolorsstatic(1:length(sgwnodesstatic),:)=colorsNew(1:length(sgwnodesstatic),:);
+        end
+        for i=1:k
+            if assignment
+                neplusAssignedToThisSGW=find(assignmentIdxNESGW==i);
+                plot(baseX(find(ismember(assignmentIdxStatic,neplusAssignedToThisSGW)))',baseY(find(ismember(assignmentIdxStatic,neplusAssignedToThisSGW)))','.','Color',mycolorsstatic(i,:),'MarkerSize',6,'LineSmoothing','off');
+            else
+                plot(baseX',baseY','.','Color',mycolorsstatic,'MarkerFaceColor',mycolorsstatic,'MarkerSize',6,'LineWidth',1,'LineSmoothing','off');
+            end
+        end
+    end
+
+%----------------------------------------------------------------------
+% Plots the SGW locations of the hierarchical topology
+
+    function plotSGWlocations
+        set(hCheckSGWlocations,'Value',1);
+        set(hHierarchicalShowSGWlocationsMenuitem,'Checked','on');
+        mycolorsstatic=[0.6 0.6 0.6];
+        plot(coordinates(corenodes,1),coordinates(corenodes,2),'o','Color',darken(mycolorsstatic),'MarkerFaceColor','w','MarkerSize',14,'LineSmoothing','off');
+    end
+
+%----------------------------------------------------------------------
+% Plots the SGWs of the hierarchical topology
+
+    function plotSGWs(assignment,icons)
+    	set(hCheckSGWs,'Value',1);
+        set(hHierarchicalShowSGWsMenuitem,'Checked','on');
+        mycolorsstatic=[0.6 0.6 0.6];
+        if icons
+            [imgH, imgW, tildevar] = size(sgwImg);
+            img='';
+            if ~planned
+                img=sgwImg;
+            else
+                img=sgwLight;
+            end
+            for i=1:length(sgwnodesstatic)
+                image([(coordinates(sgwnodesstatic(i),1)-(imgW*10)/2 +500) (coordinates(sgwnodesstatic(i),1)+(imgW*10)/2 -500)],[coordinates(sgwnodesstatic(i),2)+(imgH*10)/2 coordinates(sgwnodesstatic(i),2)-(imgH*10)/2],img,'Parent',gca);
+            end  
+            assignment=1;
+        end
+        if assignment
+            colorsNew=hsv(length(sgwnodesstatic));
+            mycolorsstatic(1:length(sgwnodesstatic),:)=colorsNew(1:length(sgwnodesstatic),:);
+            for i=1:length(sgwnodesstatic)
+                plot(coordinates(sgwnodesstatic(i),1),coordinates(sgwnodesstatic(i),2),'ko','MarkerFaceColor',mycolorsstatic(i,:),'MarkerSize',12,'LineSmoothing','off')
+            end           
+        else
+            plot(coordinates(sgwnodesstatic,1),coordinates(sgwnodesstatic,2),'ko','MarkerFaceColor',mycolorsstatic,'MarkerSize',12,'LineSmoothing','off')
+        end
+    end
+
+%----------------------------------------------------------------------
+% Plots the NE+ of the hierarchical topology
+
+    function plotNeplus(icons)
+        set(hCheckNeplus,'Value',1);
+        set(hHierarchicalShowNeplusMenuitem,'Checked','on');
+        mycolorsstatic=[0.6 0.6 0.6];
+        if icons
+            [imgH, imgW, tildevar] = size(neplusImg);
+            img='';
+            if ~planned
+                img=neplusImg;
+            else
+                img=neplusLight;
+            end
+            for i=1:length(neplusnodesNOSGW)
+                image([(coordinates(neplusnodesNOSGW(i),1)-(imgW*10)/2 + 500) (coordinates(neplusnodesNOSGW(i),1)+(imgW*10)/2 - 500)],[coordinates(neplusnodesNOSGW(i),2)+(imgH*10)/2 coordinates(neplusnodesNOSGW(i),2)-(imgH*10)/2],img,'Parent',gca);            
+            end
+        else
+            plot(coordinates(neplusnodesNOSGW,1),coordinates(neplusnodesNOSGW,2),'o','MarkerFaceColor','w','MarkerSize',11,'Color',darken(mycolorsstatic),'LineWidth',1,'LineSmoothing','off');        
+        end
+    end
+
+%----------------------------------------------------------------------
+% Plots the Mega Event placements
+
+    function plotMegaEvents
+        set(hresetHierarchicalMenuitem,'Enable','on');
+        set(hSaveMegaEventsMenuitem,'Enable','on');
+         hold on;
+        plot3(locX,locY,ones(size(locX)),'kp','MarkerFaceColor',[1 200/255 0],'MarkerSize',24,'LineWidth',1.5,'Color',darken([1 200/255 0]),'LineSmoothing','off','Parent',gca);
+        set(hCheckMegaEvents,'Enable','on');
+        set(hHierarchicalShowMegaEventsMenuitem,'Enable','on');
+        set(hHierarchicalShowMegaEventsMenuitem,'Checked','on');
+        set(hCheckMegaEvents,'Value',1);
+    end
+    
 
 %----------------------------------------------------------------------
 % Loads a topology
@@ -332,6 +1301,10 @@ OpenTopologyCallback;
         [filename, pathname] = uigetfile({'*.topo.mat;*.graphml;*.xml','Graph topology (*.topo.mat, *.graphml, *.xml)';'*.topo.mat','POCO topology (*.topo.mat)';'*.graphml','GraphML / GephiGraphML topology (*.graphml)';'*.xml','SNDlib topology (*.xml)'},'Please select a valid topology file');
         file = fullfile(pathname, filename);
         if ~isequal(filename, 0)
+            if isHierarchic
+                stopHierarchical;
+                
+            end
             reset;
             if ~isempty(strfind(filename,'.topo.mat'))
                 [topology,coordinates,tm,nodenames,distanceMatrix]=loadMatFile(file);
@@ -875,7 +1848,7 @@ OpenTopologyCallback;
             
             plotFigures;
             set(hMainFigure,'Pointer','arrow');
-            set(hStatusLabel,'String',sprintf('Current placements: %s considering only failure free case with k=%d controllers - %d placements, calculated in %d seconds',tmstring,k,nksize,calcToc));
+            set(hStatusLabel,'String',sprintf('Current placements: %s considering only failure free case with k=%d controllers - %d placements, calculated in %.2f seconds',tmstring,k,nksize,calcToc));
             set(hSavePlacementsMenuitem,'Enable','on');
             set(hEditControllerIDs,'Visible','on');
             set(hEditControllerFailureIDs,'Visible','on');
@@ -886,7 +1859,6 @@ OpenTopologyCallback;
             set(hCheckBoxDistNC,'Visible','on');
             set(hCheckBoxBalance,'Visible','on');
             set(hCheckBoxDistCC,'Visible','on');
-            set(hMainFigure,'Name','POCO - Current placements not saved');
             set(hStartPlanetlabPlotLoopMenuitem,'Enable','on');
             set(hStopPlanetlabPlotLoopMenuitem,'Enable','on');
             set(hStartPlanetlabCalcLoopMenuitem,'Enable','on');
@@ -952,7 +1924,7 @@ OpenTopologyCallback;
                      
             plotFigures;
             set(hMainFigure,'Pointer','arrow');
-            set(hStatusLabel,'String',sprintf('Current placements: %s considering up to two node failures with k=%d controllers - %d placements, calculated in %d seconds',tmstring,k,nksize,calcToc));
+            set(hStatusLabel,'String',sprintf('Current placements: %s considering up to two node failures with k=%d controllers - %d placements, calculated in %.2f seconds',tmstring,k,nksize,calcToc));
             set(hSavePlacementsMenuitem,'Enable','on');
             set(hEditControllerIDs,'Visible','on');
             set(hEditControllerFailureIDs,'Visible','on');
@@ -963,7 +1935,6 @@ OpenTopologyCallback;
             set(hCheckBoxDistNC,'Visible','on');
             set(hCheckBoxBalance,'Visible','on');
             set(hCheckBoxDistCC,'Visible','on');
-            set(hMainFigure,'Name','POCO - Current placements not saved');
         end
     end
 
@@ -1028,7 +1999,7 @@ OpenTopologyCallback;
             
             plotFigures;
             set(hMainFigure,'Pointer','arrow');
-            set(hStatusLabel,'String',sprintf('Current placements: %s considering up to k-1 controller failures with k=%d controllers - %d placements, calculated in %d seconds',tmstring,k,nksize,calcToc));
+            set(hStatusLabel,'String',sprintf('Current placements: %s considering up to k-1 controller failures with k=%d controllers - %d placements, calculated in %.2f seconds',tmstring,k,nksize,calcToc));
             set(hSavePlacementsMenuitem,'Enable','on');
             set(hEditControllerIDs,'Visible','on');
             set(hEditControllerFailureIDs,'Visible','on');
@@ -1039,7 +2010,6 @@ OpenTopologyCallback;
             set(hCheckBoxDistNC,'Visible','on');
             set(hCheckBoxBalance,'Visible','on');
             set(hCheckBoxDistCC,'Visible','on');
-            set(hMainFigure,'Name','POCO - Current placements not saved');
             set(hStartPlanetlabPlotLoopMenuitem,'Enable','on');
             set(hStopPlanetlabPlotLoopMenuitem,'Enable','on');
             set(hStartPlanetlabCalcLoopMenuitem,'Enable','on');
@@ -1064,8 +2034,10 @@ OpenTopologyCallback;
                 optTm=1;
                 tmstring='with node weights';
             end
+            tic;
             [nk,active_k]=findFullCoveragePlacements(topology);
             solution=evaluateNodeFailure(topology,active_k,tmtemp,2,nk);
+            calcToc=toc;
             nksize=size(nk,1);
 
             currPlacement = 1;
@@ -1100,7 +2072,7 @@ OpenTopologyCallback;
             
             plotFigures;
             set(hMainFigure,'Pointer','arrow');
-            set(hStatusLabel,'String',sprintf('Current placements: %s only placements being resilient against up to two node failures: k=%d controllers - %d placements',tmstring,active_k,nksize));
+            set(hStatusLabel,'String',sprintf('Current placements: %s only placements being resilient against up to two node failures: k=%d controllers - %d placements, calculated in %.2f seconds',tmstring,active_k,nksize,calcToc));
             set(hSavePlacementsMenuitem,'Enable','on');
             set(hEditControllerIDs,'Visible','on');
             set(hEditControllerFailureIDs,'Visible','on');
@@ -1111,7 +2083,6 @@ OpenTopologyCallback;
             set(hCheckBoxDistNC,'Visible','on');
             set(hCheckBoxBalance,'Visible','on');
             set(hCheckBoxDistCC,'Visible','on');
-            set(hMainFigure,'Name','POCO - Current placements not saved');
             set(hStartPlanetlabPlotLoopMenuitem,'Enable','on');
             set(hStopPlanetlabPlotLoopMenuitem,'Enable','on');
             set(hStartPlanetlabCalcLoopMenuitem,'Enable','on');
@@ -1523,7 +2494,7 @@ OpenTopologyCallback;
             else
                 bestmaxidx=[];
             end
-            plotBarsPLC(timeArray,tmvals,nodenamesPLC(controllerplacesPLC),latencyvals,changes,imbalance,mycolors,hFigurePLC,hPlotAxesPLCbar1,hPlotAxesPLCbar2,hPlotAxesPLCbar2b,hPlotAxesPLCbar3,hPlotAxesPLCbar3b,meanlatencyvals,avgLatencyArray,avgTMArray,changesPLC,sumbalancearrayPLC/plcCounter,myidx,newPLCCalc,bestmaxidx,currentmaxidxHist)
+            plotBarsPLC(timeArray,tmvals,nodenamesPLC(controllerplacesPLC),latencyvals,changes,imbalance,mycolors,hFigurePLC,hPlotAxesPLCbar1,hPlotAxesPLCbar2,hPlotAxesPLCbar2b,hPlotAxesPLCbar3,hPlotAxesPLCbar3b,meanlatencyvals,avgLatencyArray,avgTMArray,changesPLC,sumbalancearrayPLC/plcCounter,myidx,newPLCCalc,bestmaxidx,currentmaxidxHist,controllerplacesPLC)
             if newPLCCalc
                 newPLCCalc=0; % do not plot the pareto plot everytime, but only when changes appeared
             end
@@ -1734,7 +2705,7 @@ OpenTopologyCallback;
         plotpattern(4)=get(hCheckBoxIDs,'Value');
         plotpattern(5)=get(hCheckBoxHeatmap,'Value');
         plotpattern(6)=get(hCheckBoxTM,'Value');
-    
+
         controllerplaces=get(hEditControllerIDs,'String');
         controllersfailed=get(hEditControllerFailureIDs,'String');
         nodesfailed=get(hEditNodeFailureIDs,'String');
@@ -1757,6 +2728,7 @@ OpenTopologyCallback;
             end
             exportPlot(pnew,file);
         end
+
         close(pnew);
     end
 
@@ -1939,9 +2911,9 @@ OpenTopologyCallback;
 % Resets all variables and plots
     function reset
         axes(hPlotAxes1);
-        cla
+        cla;
         axes(hPlotAxes2);
-        cla
+        cla;
         topology=[];
         coordinates=[];
         tm=[];
@@ -2157,12 +3129,40 @@ OpenTopologyCallback;
                 txt=sprintf('%s\nLongitude:%.2f\nLatitude:%.2f\n%s',nodename,pos(1),pos(2),popustring);
 
             case hPlotAxes2
-                idxhit=find(solution.(valuex)==pos(1) & solution.(valuey)==pos(2));
-                txt=sprintf('Result selected with:\n%s:%.2f\n%s:%.2f\n%d results\nDisplaying in 5 seconds.',mValues{get(hXAxisPopupMenu,'Value'),2},pos(1),mValues{get(hYAxisPopupMenu,'Value'),2},pos(2),length(idxhit));
-                currPlacement = idxhit(1);
-                set(hEditControllerIDs,'String',num2str(nk(idxhit(1),:)));
-                checkScenarioSelection;
-                start(plotTimer);
+                if ~isHierarchic
+                    idxhit=find(solution.(valuex)==pos(1) & solution.(valuey)==pos(2));
+                    txt=sprintf('Result selected with:\n%s:%.2f\n%s:%.2f\n%d results\nDisplaying in 5 seconds.',mValues{get(hXAxisPopupMenu,'Value'),2},pos(1),mValues{get(hYAxisPopupMenu,'Value'),2},pos(2),length(idxhit));
+                    currPlacement = idxhit(1);
+                    set(hEditControllerIDs,'String',num2str(nk(idxhit(1),:)));
+                    checkScenarioSelection;
+                    start(plotTimer);
+                else
+                    indx =find([solutionAll.(valuex)]==pos(1) & [solutionAll.(valuey)]==pos(2));
+                    tmp=0;
+                    if indx(1) > max(size(solutionAll(1).(valuex)))
+                        indyTmp=indx(1)-max(size(solutionAll(1).(valuex)));
+                        if indyTmp > max(size(solutionAll(2).(valuex)))
+                            indyTmp=indyTmp-max(size(solutionAll(2).(valuex)));
+                            if indyTmp > max(size(solutionAll(3).(valuex)))
+                                indyTmp=indyTmp-max(size(solutionAll(3).(valuex)));
+                                tmp=solutionAll(4).nk(indyTmp,:);
+                            else
+                                tmp=solutionAll(3).nk(indyTmp,:);
+                            end
+                        else
+                            tmp=solutionAll(2).nk(indyTmp,:);
+                        end
+                    else 
+                        tmp=solutionAll(1).nk(indx(1),:);
+                    end
+                    idxhit = tmp;
+                    currPlacement = find([solutionAll.(valuey)]==pos(2) & [solutionAll.(valuex)]==pos(1),1);
+                    txt=sprintf('Result selected with:\n%s:%.2f\n%s:%.2f\n%d results\nDisplaying in 5 seconds.',mValues2{get(hXAxisPopupMenuHierarchical,'Value'),2},pos(1),mValues2{get(hYAxisPopupMenuHierarchical,'Value'),2},pos(2),length(idxhit));
+                    nk=idxhit;
+                    start(plotTimer2);
+                    start(plotParetoTimer)
+                    datacursormode 'on';
+                end
             case hPlotAxesPLCbar2b
                 idxhit=find(changesPLC==pos(1) & sumbalancearrayPLC==(pos(2)*plcCounter));
                 txt=sprintf('Result selected with:\nNumber of changes:%.2f\nAverage imbalance:%.2f\n%d results\nDisplaying in 5 seconds.',pos(1),pos(2),length(idxhit));
@@ -2553,6 +3553,9 @@ OpenTopologyCallback;
             set(hScenarioPopupMenu,'ForegroundColor',foregroundColor,'BackgroundColor',backgroundColor');
             set(hXAxisPopupMenu,'ForegroundColor',foregroundColor,'BackgroundColor',backgroundColor);
             set(hYAxisPopupMenu,'ForegroundColor',foregroundColor,'BackgroundColor',backgroundColor);
+%             if isHierarchic
+%                 plotGermany([0.8784 0.9216 0.9686]);
+%             end
         else
             checkedClassic = 'off';
             checkedDark = 'on';
@@ -2567,11 +3570,13 @@ OpenTopologyCallback;
             set(hScenarioPopupMenu,'ForegroundColor','w','BackgroundColor',[0.4 0.4 0.4]);
             set(hXAxisPopupMenu,'ForegroundColor','w','BackgroundColor',[0.4 0.4 0.4]);
             set(hYAxisPopupMenu,'ForegroundColor','w','BackgroundColor',[0.4 0.4 0.4]);
+%             if isHierarchic
+%                 plotGermany([0.8 0.8 0.8]);
+%             end
         end
         set(hThemesClassicMenuitem,'Checked',checkedClassic);
         set(hThemesDarkMenuitem,'Checked',checkedDark);
         set(hMainFigure,'Color',backgroundColor); 
-        set(hPanelAxes1,'BackgroundColor',get(hMainFigure,'Color'));
         set(hPanelAxes2,'BackgroundColor',get(hMainFigure,'Color'));
         set(hPlotAxes2,'Color',get(hMainFigure,'Color'));
         set(hCheckBoxBalance,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor); 
@@ -2588,41 +3593,103 @@ OpenTopologyCallback;
         set(hXAxisLabel,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);    
         set(hYAxisLabel,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);    
         set(hLabelPlotOptions,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hCheckLinks,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor); 
+        set(hCheckBaseStations,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor); 
+        set(hCheckAccessNodes,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor); 
+        set(hCheckMegaEvents,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor); 
+        set(hCheckAssignment,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);    
+        set(hCheckSGWs,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);    
+        set(hCheckNeplus,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);    
+        set(hCheckIcons,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hLabelLatency,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hCheckLatency,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hCheckVirtualSGWs,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hCheckMegaEventResources,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hMetricsLabel,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hCheckSGWlocations,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hBusyLabel,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hLayerLabel,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
         fixAxes2PlotTextColor;
+        
     end
 
 
 %----------------------------------------------------------------------
 % Switches the view to compact mode, which only shows the plotted topology
-    function compactView(hObject, eventdata)
+
+    function compactViewCallback(hObject, eventdata)
+        compactView;
+    end
+
+    function compactView
         set(hCompactViewMenuitem,'Checked','on');
         set(hFullViewMenuitem,'Checked','off');        
         set(hCompactViewMenuitem, 'Accelerator','');
         set(hFullViewMenuitem, 'Accelerator','T');
         set(hPanelAxes2,'Visible','off');
-        set(hPanelAxes1,'Position',[0.05 0.04 0.72 0.95]);
+        set(hPanelAxes1,'Position',compactViewSize);
         set(hYAxisLabel,'Visible','off');
         set(hYAxisPopupMenu,'Visible','off');
         set(hXAxisLabel,'Visible','off');
-        set(hXAxisPopupMenu,'Visible','off');        
+        set(hXAxisPopupMenu,'Visible','off');      
+        set(hYAxisPopupMenuHierarchical,'Visible','off');
+        set(hXAxisPopupMenuHierarchical,'Visible','off');   
     end
 
 
 %----------------------------------------------------------------------
 % Switches the view to full mode, which shows the plotted topology and the
 % pareto-plot
-    function fullView(hObject, eventdata)
+
+    function fullViewCallback(hObject, eventdata)
+        fullView;
+    end
+
+    function fullView
         set(hCompactViewMenuitem,'Checked','off');
         set(hFullViewMenuitem,'Checked','on');     
         set(hCompactViewMenuitem, 'Accelerator','T');
         set(hFullViewMenuitem, 'Accelerator','');
         set(hPanelAxes2,'Visible','on');
-        set(hPanelAxes1,'Position',[0.05 0.5 0.72 0.47]);
+        set(hPanelAxes1,'Position',fullViewSize);
+%         set(hPanelAxesBaseStations,'Position',fullViewSize);
+%         set(hPanelAxesBaseStationsAssignment,'Position',fullViewSize);
+%         set(hPanelAxesSGWs,'Position',fullViewSize);
+%         set(hPanelAxesNeplus,'Position',fullViewSize);
+%         set(hPanelAxesMegaEvents,'Position',fullViewSize);
+%         set(hPanelAxesCalculatedSGWs,'Position',fullViewSize);
+%         set(hPanelAxesBorder,'Position',fullViewSize);
+%         set(hPanelAxesAccessNodes,'Position',fullViewSize);
+%         set(hPanelAxesSGWsIcons,'Position',fullViewSize);
+%         set(hPanelAxesSGWsIconsLight,'Position',fullViewSize);
+%         set(hPanelAxesSGWsNormal,'Position',fullViewSize);
+%         set(hPanelAxesNeplusIcons,'Position',fullViewSize);
+%         set(hPanelAxesNeplusIconsLight,'Position',fullViewSize);
+%         set(hPanelAxesNeplusNormal,'Position',fullViewSize);
+%         set(hPanelAxesMegaEventResources,'Position',fullViewSize);
+%         set(hPanelAxesMegaEventResourcesNormal,'Position',fullViewSize);
+%         set(hPanelAxesMegaEventResourcesAssignment,'Position',fullViewSize);
+%         set(hPanelAxesCalculatedSGWs,'Position',fullViewSize);
+%         set(hPanelAxesCalculatedSGWsIcons,'Position',fullViewSize);
+%         set(hPanelAxesCalculatedSGWsNormal,'Position',fullViewSize);
+%         set(hPanelAxesCalculatedSGWsLatency,'Position',fullViewSize);
+%         set(hPanelAxesCalculatedSGWsLatencyAssignment,'Position',fullViewSize);
+%         set(hPanelAxesAccessNodesLatencyAssignment,'Position',fullViewSize);
+%         set(hPanelAxesAccessNodesLatency,'Position',fullViewSize);
+%         set(hPanelAxesAccessNodesAssignment,'Position',fullViewSize);
+%         set(hPanelAxesSGWsAssignment,'Position',fullViewSize);
+%         set(hPanelAxesCoreNodes,'Position',fullViewSize);
         if ~isempty(get(hYAxisPopupMenu,'String'))
             set(hYAxisLabel,'Visible','on');
             set(hYAxisPopupMenu,'Visible','on');
             set(hXAxisLabel,'Visible','on');
             set(hXAxisPopupMenu,'Visible','on');
+        end
+        if ~isempty(get(hYAxisPopupMenuHierarchical,'String'))
+            set(hYAxisLabel,'Visible','on');
+            set(hYAxisPopupMenuHierarchical,'Visible','on');
+            set(hXAxisLabel,'Visible','on');
+            set(hXAxisPopupMenuHierarchical,'Visible','on');
         end
     end
 

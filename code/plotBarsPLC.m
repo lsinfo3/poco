@@ -9,7 +9,7 @@ if ~isempty(tmvals)
         bar(i, tmvals(i),'FaceColor', mycolors(i,:),'LineWidth',2);
     end
     box off;
-
+    %     ylim([0 60])
     xlim([0.5 length(tmvals)+0.5])
     set(gca,'XTick',1:length(tmvals))
     set(gca,'XTickLabel',regexprep(contNames,'^.*\.([^\.]*\.[^\.]*)$','$1'))
@@ -22,17 +22,31 @@ if newPLCCalc & ~isempty(changesPLC)
     cla(axesid3,'reset')
     set(0,'CurrentFigure',figureid)
     set(figureid,'CurrentAxes',axesid3);
-    plotParetoPLC(changesPLC,sumbalancearrayPLC,'ShowSelectedidx',myidx,'Parent',figureid,'Axes',axesid3);
+    plotPareto2(changesPLC,sumbalancearrayPLC,myidx,figureid,axesid3);
     if ~isempty(bestmaxidx)
         plot(changesPLC(currentmaxidx),sumbalancearrayPLC(currentmaxidx),'o','MarkerSize',5,'MarkerFaceColor',[0 0 1],'Color',darken([0 0 1]));
         plot(changesPLC(bestmaxidx),sumbalancearrayPLC(bestmaxidx),'o','MarkerSize',10,'MarkerFaceColor',[0 1 0],'Color',darken([0 1 0]),'LineWidth',2)
         text('Position',[changesPLC(bestmaxidx),sumbalancearrayPLC(bestmaxidx)],'String','    Overall best according to \pi^{max latency}_{\0}','VerticalAlignment','middle','HorizontalAlignment','left','Color',darken([0 1 0]),'FontSize',9);
-
+    %     currentmaxidx
         plot(changesPLC(currentmaxidx(end)),sumbalancearrayPLC(currentmaxidx(end)),'o','MarkerSize',10,'MarkerFaceColor',[0 0 1],'Color',darken([0 0 1]),'LineWidth',2)
         text('Position',[changesPLC(currentmaxidx(end)),sumbalancearrayPLC(currentmaxidx(end))],'String','    Current best according to \pi^{max latency}_{\0}','VerticalAlignment','middle','HorizontalAlignment','left','Color',darken([0 0 1]),'FontSize',9);    
     end
     text('Position',[changesPLC(myidx),sumbalancearrayPLC(myidx)],'String','    Current Placement','VerticalAlignment','middle','HorizontalAlignment','left','Color','r','FontSize',9);
-
+    % if ~isempty(minmaxchanges)
+    %     hold on;
+    %     mycolorL='gr';
+    %     for i = 1:length(minmaxchanges)
+    %         bar(i, minmaxchanges(i),'FaceColor', mycolorL(i),'LineWidth',2);
+    %     end
+    %     box off;
+    %     xlim([0.5 length(minmaxchanges)+0.5])
+    %     set(gca,'XTick',1:length(minmaxchanges))
+    %     set(gca,'XTickLabel',minmaxchangesnk)
+    %     set(gca,'YGrid','on')
+    %     ylabel('Accumulated number of changes')
+    %     xlabel('Best/worst placement (number of controller changes)')
+    %     set(gca,'Visible','on')
+    % end
     xlabel('Accumulated number of changes')
     ylabel('Average  \pi^{imbalance}_{\0}')
 end
@@ -46,6 +60,7 @@ if ~isempty(avgLatency)
     set(h1,'LineWidth',2)
     set(h2,'LineWidth',2)
     xlabel('Time (min)')
+%     set(ax,'xlim',[timeArray(1) max(1+timeArray(1),timeArray(end))]);
     set(ax(1),'ylim',[0 450],'ytick',[0 450],'yminorgrid','on');
     ylims2=get(ax(2),'Ylim');
     set(ax(2),'ytick',ylims2,'yminorgrid','on');
@@ -62,6 +77,7 @@ if ~isempty(avgLatency)
     set(h1,'LineWidth',2)
     set(h2,'LineWidth',2)
     xlabel('Time (min)')
+%     set(ax,'xlim',[timeArray(1) max(1+timeArray(1),timeArray(end))]);
     ylims1=get(ax(1),'Ylim');
     set(ax(1),'ytick',ylims1,'yminorgrid','on');
     ylims2=get(ax(2),'Ylim');
@@ -88,6 +104,7 @@ if ~isempty(latencyvals)
     meanml=min(600,1000*meanlatencyvals);
     meanml(isnan(meanlatencyvals))=nan;
     for i = 1:length(latencyvals)
+        %         fprintf('%d:%f\n',i,latencyvals(i))
         bar(i, ml(i),'FaceColor', getgreenyellowred(latencyvals(i)),'LineWidth',2);
         plot(i+[-0.4 +0.4], [1 1]*meanml(i),'k+-','LineWidth',2);
         if ~isnan(meanlatencyvals(i)) & meanlatencyvals(i)<inf & meanlatencyvals(i)<0.6

@@ -1,71 +1,16 @@
 %% Plots the distances in a topology
-function [tmvals,latencyvals,mycolors,meanlatencyvals,assignments]=plotTopologyPLC(topology,coordinates,controllerPlaces,varargin)
-
-p = inputParser;    % Parser to parse input arguments
-
-p.addRequired('topology', @(x)isnumeric(x) && diff(size(x))==0); % symmetric numerical topology matrix
-p.addRequired('coordinates', @(x)isnumeric(x) && size(x,1)==size(topology,1) && size(x,2)==2);
-p.addParamValue('nodeWeights', ones(1,size(topology,1)) ,@(x)isnumeric(x) && size(x,2)==size(topology,1) && size(x,1)==1);
-
-% Plot Parameters
-p.addParamValue('ShowNodeToControllerLatency', 'off',  @(x)strcmpi(x,'off')||strcmpi(x,'on'));
-p.addParamValue('ShowControllerImbalance', 'off',  @(x)strcmpi(x,'off')||strcmpi(x,'on'));
-p.addParamValue('ShowControllerToControllerLatency', 'off',  @(x)strcmpi(x,'off')||strcmpi(x,'on'));
-p.addParamValue('ShowIds', 'off',  @(x)strcmpi(x,'off')||strcmpi(x,'on'));
-p.addParamValue('ShowControllerlessHeatmap', 'off',  @(x)strcmpi(x,'off')||strcmpi(x,'on'));
-p.addParamValue('ShowNodeWeights', 'off',  @(x)strcmpi(x,'off')||strcmpi(x,'on'));
-p.addParamValue('Parent', '');
-p.addParamValue('CurrentAxis', '');
-p.addParamValue('Export', 'off',  @(x)strcmpi(x,'off')||strcmpi(x,'pdf')||strcmpi(x,'png')||strcmpi(x,'jpg'));
-p.addParamValue('FileName', '',  @ischar);
-p.addParamValue('Position', [0 0 800 600],  @(x)isnumeric(x) && length(x)==4);
-p.addParamValue('ShowMap', 'off', @(x)strcmpi(x,'off')||strcmpi(x,'on'));
-% Topology / Placement Parameters
-p.addRequired('controllerPlaces',  @isnumeric);
-p.addParamValue('FailedControllers', [],  @isnumeric);
-p.addParamValue('FailedNodes', [],  @isnumeric);
-p.addParamValue('FailedLinks', [],  @isnumeric);
-p.addParamValue('ReferenceDiameter', nan,  @isnumeric);
-
-% Visualization Parameters
-p.addParamValue('Colors', [hsv(5);hsv(length(controllerPlaces)-5)],  @isnumeric);
-p.addParamValue('Markers', 'odsv^pdshov^x+*',  @ischar);
-
-p.parse(topology, coordinates, controllerPlaces, varargin{:});
-% p.Results
-plotids=strcmpi(p.Results.ShowIds,'on');  % boolean to show ids
-plotlatencyN2C=strcmpi(p.Results.ShowNodeToControllerLatency,'on'); % boolean to color according to node-to-controller distances
-plotbal=strcmpi(p.Results.ShowControllerImbalance,'on'); % boolean to color and shape according to balancing
-plotlatencyC2C=strcmpi(p.Results.ShowControllerToControllerLatency,'on'); % boolean to color according to inter-controller distances
-plottm=strcmpi(p.Results.ShowNodeWeights,'on'); % boolean if tm should be used for node sizes
-plotheatmap=strcmpi(p.Results.ShowControllerlessHeatmap,'on'); % boolean if heatmap should be shown
-plotexport=~strcmpi(p.Results.Export,'off'); % boolean if plot is used for display only
-mapbool=strcmpi(p.Results.ShowMap,'on');
-
-% Check Matlab-version
-matlabVersion=str2num(regexprep(version('-release'),'[^0-9]','')) ;
-
-nodeWeights=p.Results.nodeWeights;
-axesid=p.Results.CurrentAxis;
-if isempty(p.Results.Parent)
-    figureid=figure();
-else
-    if strcmpi(get(p.Results.Parent,'type'),'figure') 
-        figureid=figure(p.Results.Parent);
-    else
-        a = p.Results.Parent;
-        figureid=axes(p.Results.Parent);
-    end
-end
-
-tm=log(1+nodeWeights/nanmax(nodeWeights)*10);
+function [tmvals,latencyvals,mycolors,meanlatencyvals,assignments]=plotTopologyPLC(mapbool,topology,coordinates,plotstyle,controllerplaces,controllersfailed,nodesfailed,linksfailed,figureid,axesid,tmPlain,mydiameter,mycolors,mymarkers)
+tm=log(1+tmPlain/nanmax(tmPlain)*10);
 cla(axesid,'reset');
 set(0,'CurrentFigure',figureid)
 set(figureid,'CurrentAxes',axesid);
 if mapbool
-    fname = 'worldmap.png';
+
+    %fname =  strcat('file:/',pwd,'\images\worldmap.png');
+    fname='worldmap.png';
+%    disp('Test')
     img = imread(fname,'png');
-    [imgH,imgW,tildevar] = size(img);
+    [imgH,imgW,~] = size(img);
     
     %# Mercator projection
     [x,y] = mercatorProjection(coordinates(:,1), coordinates(:,2), imgW, imgH);
@@ -74,28 +19,84 @@ if mapbool
     %# plot markers on map
     imagesc(img)
 end
-hold on;
 
-controllersfailed=p.Results.FailedControllers;
+% gplot(topology~=inf,coordinates,'-')%
 
-nodesfailed=p.Results.FailedNodes;
+% gray links
+% [rlink,clink]=find(topology~=inf);
+% beginx=coordinates(rlink,1);
+% beginy=coordinates(rlink,2);
+% endx=coordinates(clink,1);
+% endy=coordinates(clink,2);
+% for m=1:length(beginx)
+%     plot([beginx(m) endx(m)],[beginy(m) endy(m)],'Color',[0.8 0.8 0.8],'LineWidth',2, 'LineSmoothing','off');
+% end
 
-linksfailed=p.Results.FailedLinks;
-linksontop=0;
+% ,'Color',[0.8 0.8 0.8],'LineWidth',3);
+hold on
+plotids=0;  % boolean to show ids
+plotdistnc=0; % boolean to color according to node-to-controller distances
+plotbal=0; % boolean to color and shape according to balancing
+plotdistcc=0; % boolean to color according to inter-controller distances
+plottm=0; % boolean if tm should be used for node sizes
+plotheatmap=0; % boolean if heatmap should be shown
 
-if isnan(p.Results.ReferenceDiameter)
-    distanceMatrix=topology;
-    distanceMatrix(distanceMatrix==inf)=nan;
-    mydiameter=nanmax(nanmax(distanceMatrix));
-else
-    mydiameter=p.Results.ReferenceDiameter;
+if exist('plotstyle','var')
+    if ~isempty(strfind(plotstyle,'ids'))
+        plotids=1;
+    end
+    
+    if ~isempty(strfind(plotstyle,'distnc'))
+        plotdistnc=1;
+    end
+    
+    if ~isempty(strfind(plotstyle,'distcc'))
+        plotdistcc=1;
+    end
+    
+    if ~isempty(strfind(plotstyle,'balance'))
+        plotbal=1;
+    end
+    
+    if ~isempty(strfind(plotstyle,'heat-map'))
+        plotheatmap=1;
+    end
+    
+    if ~isempty(strfind(plotstyle,'tm'))
+        plottm=1;
+    end
 end
 
-mycolors=p.Results.Colors;
+if ~exist('controllersfailed','var')
+    controllersfailed=[];
+end
 
-mymarkers=p.Results.Markers;
+if ~exist('nodesfailed','var')
+    nodesfailed=[];
+end
 
-if ~plottm
+if ~exist('linksfailed','var')
+    linksfailed=[];
+    linksontop=0;
+else
+    linksontop=1;
+end
+
+if ~exist('mydiameter','var')
+    mydist=topology;
+    mydist(mydist==inf)=nan;
+    mydiameter=nanmax(nanmax(mydist));
+end
+
+if ~exist('mycolors','var')
+    mycolors=[hsv(5);hsv(length(controllerplaces)-5)];
+end
+
+if ~exist('mymarkers','var')
+    mymarkers='o';%mymarkers='odsv^pdshov^x+*';
+end
+
+if ~exist('tm','var') || plottm==0
     tm=ones(1,size(topology,1));
 end
 
@@ -105,31 +106,34 @@ if plotheatmap
     linksfailed=[];
 end
 
-if matlabVersion < 2013
-    nkworking=setdiff(controllerPlaces,[nodesfailed controllersfailed]);
-else
-    nkworking=setdiff(controllerPlaces,[nodesfailed controllersfailed],'legacy');
-end
+nkworking=setdiff(controllerplaces,[nodesfailed controllersfailed]);
 
 % to provide from errors due to unexpected input
 if isempty(nkworking)
-    plotlatencyN2C=0; % boolean to color according to node-to-controller distances
+    plotdistnc=0; % boolean to color according to node-to-controller distances
     plotbal=0; % boolean to color and shape according to balancing
-    plotlatencyC2C=0; % boolean to color according to inter-controller distances
+    plotdistcc=0; % boolean to color according to inter-controller distances
     plotheatmap=0; % boolean if heatmap should be shown
 end
 
-if matlabVersion < 2013
-    controllersfailed=intersect([controllersfailed intersect(controllerPlaces,nodesfailed)],controllerPlaces);
-else
-    controllersfailed=intersect([controllersfailed intersect(controllerPlaces,nodesfailed,'legacy')],controllerPlaces,'legacy');
-end
+controllersfailed=intersect([controllersfailed intersect(controllerplaces,nodesfailed)],controllerplaces);
 
 % Add broken links for broken nodes
 for m=1:length(nodesfailed)
     neighbors=find(topology(:,nodesfailed(m))~=inf);
     linksfailed=[linksfailed;[repmat(nodesfailed(m),length(neighbors),1) neighbors]];
 end
+
+% % Plot broken links
+% if exist('linksfailed','var') && ~isempty(linksfailed)
+%     beginx=coordinates(linksfailed(:,1),1);
+%     beginy=coordinates(linksfailed(:,1),2);
+%     endx=coordinates(linksfailed(:,2),1);
+%     endy=coordinates(linksfailed(:,2),2);
+%     for m=1:length(beginx)
+%         plot([beginx(m) endx(m)],[beginy(m) endy(m)],'r--','LineWidth',3, 'LineSmoothing','off');
+%     end
+% end
 
 % Plot broken nodes
 placex=coordinates(nodesfailed,1);
@@ -142,6 +146,7 @@ placey=coordinates(controllersfailed,2);
 plot(placex,placey,'o','Color','r','MarkerFaceColor','none','MarkerSize',20,'LineWidth',3, 'LineSmoothing','off');
 plot(placex,placey,'o','Color','r','MarkerFaceColor','none','MarkerSize',29,'LineWidth',3, 'LineSmoothing','off');
 plot(placex,placey,'o','Color','r','MarkerFaceColor','none','MarkerSize',38,'LineWidth',3, 'LineSmoothing','off');
+% plot(placex,placey,'o','Color','r','MarkerFaceColor','none','MarkerSize',29);
 plot(placex,placey,'x','Color','r','MarkerFaceColor','none','MarkerSize',38,'LineWidth',4);
 
 % Plot controller-less nodes
@@ -154,25 +159,21 @@ for m=1:size(linksfailed,1)
     topologyreduced(linksfailed(m,1),linksfailed(m,2))=Inf;
     topologyreduced(linksfailed(m,2),linksfailed(m,1))=Inf;
 end
-modifiedDistanceMatrix=topologyreduced;
+mydistreduced=topologyreduced;
 for m=1:length(nodesfailed)
-    modifiedDistanceMatrix(nodesfailed(m),nodesfailed(m))=Inf;
+    mydistreduced(nodesfailed(m),nodesfailed(m))=Inf;
 end
 accessnodes=[];
-for m=1:size(modifiedDistanceMatrix,1)
-    if length(find(modifiedDistanceMatrix(m,:)~=inf))==1
-        modifiedDistanceMatrix(m,:)=Inf;
-        modifiedDistanceMatrix(:,m)=Inf;
-        coordinates(m,:);
+for m=1:size(mydistreduced,1)
+    if length(find(mydistreduced(m,:)~=inf))==1
+        mydistreduced(m,:)=Inf;
+        mydistreduced(:,m)=Inf;
+        coordinates(m,:)
         accessnodes=[accessnodes m];
     end
 end
-temp=nanmin(modifiedDistanceMatrix(:,nkworking),[],2);
-if matlabVersion < 2013
-    uncovered=setdiff(find(temp==Inf | isnan(temp)),[accessnodes nodesfailed]);
-else
-    uncovered=setdiff(find(temp==Inf | isnan(temp)),[accessnodes nodesfailed],'legacy');
-end
+temp=nanmin(mydistreduced(:,nkworking),[],2);
+uncovered=setdiff(find(temp==Inf | isnan(temp)),[accessnodes nodesfailed]);
 placex=coordinates(uncovered,1);
 placey=coordinates(uncovered,2);
 plot(placex,placey,'o','MarkerFaceColor',[0.95 0.95 0.95],'MarkerSize',20,'LineWidth',3, 'LineSmoothing','off','MarkerEdgeColor',[0.9 0.9 0.9]);
@@ -191,24 +192,20 @@ if plotheatmap
             % disable nodes
             topologyreduced(nodesfailed,:)=Inf;
             topologyreduced(:,nodesfailed)=Inf;
-            modifiedDistanceMatrix=topologyreduced;
+            mydistreduced=topologyreduced;
             for m=1:length(nodesfailed)
-                modifiedDistanceMatrix(nodesfailed(m),nodesfailed(m))=Inf;
+                mydistreduced(nodesfailed(m),nodesfailed(m))=Inf;
             end
             accessnodes=[];
-            for m=1:size(modifiedDistanceMatrix,1)
-                if length(find(modifiedDistanceMatrix(m,:)~=inf))==1
-                    modifiedDistanceMatrix(m,:)=Inf;
-                    modifiedDistanceMatrix(:,m)=Inf;
+            for m=1:size(mydistreduced,1)
+                if length(find(mydistreduced(m,:)~=inf))==1
+                    mydistreduced(m,:)=Inf;
+                    mydistreduced(:,m)=Inf;
                     accessnodes=[accessnodes m];
                 end
             end
-            temp=min(modifiedDistanceMatrix(:,nkworking),[],2);
-            if matlabVersion < 2013
-                uncovered=setdiff(find(temp==Inf),[accessnodes nodesfailed]);
-            else
-                uncovered=setdiff(find(temp==Inf),[accessnodes nodesfailed],'legacy');
-            end
+            temp=min(mydistreduced(:,nkworking),[],2);
+            uncovered=setdiff(find(temp==Inf),[accessnodes nodesfailed]);
             heatmap(uncovered)=heatmap(uncovered)+1; % add 1 to all controller-less nodes in this scenario
         end
     end
@@ -216,17 +213,18 @@ if plotheatmap
     nodesfailed=[];
 end
 
+% size(heatmap)
 
 % distnc,balance
-[temp,temp2]=nanmin(modifiedDistanceMatrix(:,nkworking),[],2);
+[temp,temp2]=nanmin(mydistreduced(:,nkworking),[],2);
 
 % for output
 if ~isempty(temp2)
     latencyvals=temp;
     latencyvals(latencyvals==inf)=nan;
     assignments=temp2;
-    meanlatencyvals=nanmean(modifiedDistanceMatrix(:,nkworking),2);
-    tmvals=accumarray(temp2,nodeWeights,[],@nansum);
+    meanlatencyvals=nanmean(mydistreduced(:,nkworking),2);
+    tmvals=accumarray(temp2,tmPlain,[],@nansum);
 else
     latencyvals=[];
     meanlatencyvals=[];
@@ -234,10 +232,11 @@ else
 end
 
 [a,b]=sort(tm,'descend');
+% size(b)
 
 
 % colored links % PLC ADAPTED
-if plotbal || plotlatencyN2C
+if plotbal || plotdistnc
     for m=b % all nodes
         if isempty(find(m==[uncovered' nodesfailed nkworking],1))
             beginx=coordinates(m,1);
@@ -262,7 +261,7 @@ for m=b
             else
                 c=getgreenyellowred(0);
             end
-        elseif plotlatencyN2C
+        elseif plotdistnc
             c=getgreenyellowred(temp(m)/mydiameter);
         elseif plotbal
             c=mycolors(temp2(m),:);
@@ -277,20 +276,20 @@ for m=b
         end
         placex=coordinates(m,1);
         placey=coordinates(m,2);
-        plot3(placex,placey,1,v,'MarkerFaceColor',c,'MarkerSize',max(1e-3,20*tm(m)),'Color',cborder,'LineWidth',3, 'LineSmoothing','off')
+        plot3(placex,placey,1,v,'MarkerFaceColor',c,'MarkerSize',max(1e-3,20*tm(m)),'Color',cborder,'LineWidth',3, 'LineSmoothing','off');
     end
 end
 
 % Plot controllers
-temp=modifiedDistanceMatrix(nkworking,nkworking);
+temp=mydistreduced(nkworking,nkworking);
 temp(temp==Inf)=nan;
 temp=nanmax(temp,[],2);
 for m=1:length(nkworking(:))
     placex=coordinates(nkworking(m),1);
     placey=coordinates(nkworking(m),2);
-    if plotlatencyC2C
+    if plotdistcc
         c=getgreenyellowred(temp(m)/mydiameter);
-    elseif plotlatencyN2C
+    elseif plotdistnc
         c='g';
     elseif plotbal
         c=mycolors(m,:);
@@ -310,7 +309,21 @@ for m=1:length(nkworking(:))
     plot3(placex,placey,1,v,'MarkerFaceColor',c,'MarkerSize',max(1e-3,20*tm(nkworking(m))),'Color',cborder,'LineWidth',3, 'LineSmoothing','off');
     plot3(placex,placey,1,v,'MarkerFaceColor','none','MarkerSize',max(1e-3,9+20*tm(nkworking(m))),'Color',cborder,'LineWidth',3, 'LineSmoothing','off');
     plot3(placex,placey,1,v,'MarkerFaceColor','none','MarkerSize',max(1e-3,18+20*tm(nkworking(m))),'Color',cborder,'LineWidth',3, 'LineSmoothing','off');
+    %     plot3(placex,placey,1,v,'MarkerFaceColor','none','MarkerSize',9+20*tm(nkworking(m)),'Color',darken(c),'LineWidth',1, 'LineSmoothing','off');
 end
+
+% if linksontop
+%     % Plot broken links again on top
+%     if exist('linksfailed','var') && ~isempty(linksfailed)
+%         beginx=coordinates(linksfailed(:,1),1);
+%         beginy=coordinates(linksfailed(:,1),2);
+%         endx=coordinates(linksfailed(:,2),1);
+%         endy=coordinates(linksfailed(:,2),2);
+%         for m=1:length(beginx)
+%             plot([beginx(m) endx(m)],[beginy(m) endy(m)],'r','LineWidth',2);
+%         end
+%     end
+% end
 
 if plotids
     for i=1:size(coordinates,1)
@@ -323,8 +336,8 @@ end
 % Adapt visible range and remove axes
 set(gca,'Visible','off');
 if mapbool
-    xlim([2.5*imgW/72 imgW*71/72]);
-    ylim([0.17*imgH 0.67*imgH]);
+xlim([2.5*imgW/72 imgW*71/72]);
+ylim([0.17*imgH 0.67*imgH]);
 end
 
 % getgreenyellowred Creates a colormap from green to dark red depending on

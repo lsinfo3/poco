@@ -171,4 +171,31 @@ catch ME
     end
 end
 
+% for k=mink:maxk
+%     fprintf('Trying k=%d ',k);
+%     try
+%         nk=combnk(1:size(islands,2),k);
+%         avgarray=plotcombs(islands,nk);
+%     catch ME
+%         idSegLast = regexp(ME.identifier, '(?<=:)\w+$', 'match');
+%         %clean up for possible error conditions here. Rethrow if unknown error.
+%         switch idSegLast{1}
+%             case 'nomem'
+%                 %out of memory
+%                 disp('Out of memory. Cannot be solved that way, return [].')
+%                 solution=[];
+%                 return;
+%             otherwise
+%                 %An unexpected error happened
+%                 rethrow(ME)
+%         end
+%     end
+%     %     min(avgarray)
+%     if ~isempty(find(avgarray==0,1))
+%         solution=unique(remainidx(nk(avgarray==0,:)),'rows');
+%         fprintf('successfull, %d solutions\n',size(solution,1));
+%         return;
+%     end
+%     fprintf('not successfull, %.2d%% percent of islands covered\n',100-ceil(min(avgarray)*100));
+% end
 end
