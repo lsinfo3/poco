@@ -44,7 +44,7 @@ if ~exist('workingsubset','var')
     end
 end
 
-mylimit=2e7/4;
+mylimit=3e5;
 
 if ~exist('singlePlacementInstance','var')
     
@@ -72,6 +72,7 @@ if ~exist('singlePlacementInstance','var')
         % Returns all placements for numberOfControllers
         [avgLatencyN2C,maxLatencyN2C,controllerlessNodes,controllerImbalance,avgLatencyC2C,maxLatencyC2C]=calculateMetrics(distanceMatrix,nk(:,workingsubset),nodeWeights);
     else
+        evaluationResult=[];
         return
         % find largest computable numberOfControllers (fitting in RAM)
         for i=numberOfControllers:-1:1

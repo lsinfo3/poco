@@ -104,6 +104,30 @@ end
 xlims=get(gca,'xlim');
 ylims=get(gca,'ylim');
 
+if xlims(2)>2*max(xinthin) || xlims(2)<max(xinthin)
+    xlims(2)=max(xinthin)*1.2;
+end
+
+if ylims(2)>2*max(yinthin) || ylims(2)<max(yinthin)
+    ylims(2)=max(yinthin)*1.2;
+end
+
+if xlims(1)<0
+    xlims(1)=0;
+end
+
+if ylims(1)<0
+    ylims(1)=0;
+end
+
+if xlims(1)>min(xinthin)
+    xlims(1)=min(xinthin)*0.9;
+end
+
+if ylims(1)>min(yinthin)
+    ylims(1)=min(yinthin)*0.9;
+end
+
 c=[0.9 0.9 0.9];
 plot(x,y,'o-','LineWidth',2,'MarkerSize',10,'Color',darken(c),'MarkerFaceColor',c);
 
@@ -124,9 +148,13 @@ xlabel(p.Results.XLabel);
 ylabel(p.Results.YLabel);
 if ~isempty(p.Results.XLim)
     xlim(p.Results.XLim);
+else
+    xlim(xlims)
 end
 if ~isempty(p.Results.YLim)
     ylim(p.Results.YLim);
+else
+    ylim(ylims)
 end
 
 if plotexport==1 % Export is activated, save as pdf file

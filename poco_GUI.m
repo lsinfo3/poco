@@ -1,9 +1,9 @@
-% POCO_GUI Provides a graphical user interface for plotting resilient 
+% POCO_GUI Provides a graphical user interface for plotting resilient
 %   Pareto-based Optimal COntrollerplacements.
 %
 %   Copyright 2012-2014 David Hock, Stefan Geiﬂler, Fabian Helmschrott,
 %                       Steffen Gebert
-%                       Chair of Communication Networks, Uni Wuerzburg   
+%                       Chair of Communication Networks, Uni Wuerzburg
 %
 function poco_GUI
 % Check Matlab-version
@@ -40,6 +40,7 @@ currPlacement=0;
 textXaxis = '';
 textYaxis = '';
 isHierarchic=0;
+highLatency=300;
 
 topologyPLC=[];
 coordinatesPLC=[];
@@ -174,119 +175,127 @@ hPlotAxesPLCbar3b     =   axes('Parent', hFigurePLC,'Units', 'normalized','Handl
 
 % File menu
 hFileMenu = uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','File');
-    hOpenMenu = uimenu('Parent',hFileMenu,'HandleVisibility','on','Label','Open...','Callback', @OpenTopologyCallback,'Accelerator','O');
-    hSaveAsMenu = uimenu('Parent',hFileMenu,'HandleVisibility','on','Label','Save as','Accelerator','S','Enable','off','Callback', @SaveAsTopologyCallback);
-    hResetAllMenu = uimenu('Parent',hFileMenu,'Label','Close','HandleVisibility','on','Callback', @resetAllHandle,'Accelerator','W','Enable','off');
-    hImportMenu = uimenu('Parent',hFileMenu,'Label','Import','HandleVisibility','on','Separator','on','Enable','off');
-        hImportNodeWeightsMenu = uimenu('Parent',hImportMenu,'Label','Node weights','HandleVisibility','on','Callback',@importNodeWeights);
-    hExportMenu = uimenu('Parent',hFileMenu,'HandleVisibility','on','Label','Export','Enable','off');
-        hExportImageMenuitem = uimenu('Parent',hExportMenu,'HandleVisibility','on','Label','Save topology as image','Callback',{@exportPlotCallback,''});
-        hExportGephiMenuitem = uimenu('Parent',hExportMenu,'HandleVisibility','on','Label','Save Gephi csv','Callback',@exportGephiCSV);
-    hExitMenu = uimenu('Parent',hFileMenu','Label','Exit','HandleVisibility','on','Separator','on','Callback', @closeGUI);
+hOpenMenu = uimenu('Parent',hFileMenu,'HandleVisibility','on','Label','Open...','Callback', @OpenTopologyCallback,'Accelerator','O');
+hSaveAsMenu = uimenu('Parent',hFileMenu,'HandleVisibility','on','Label','Save as','Accelerator','S','Enable','off','Callback', @SaveAsTopologyCallback);
+hResetAllMenu = uimenu('Parent',hFileMenu,'Label','Close','HandleVisibility','on','Callback', @resetAllHandle,'Accelerator','W','Enable','off');
+hImportMenu = uimenu('Parent',hFileMenu,'Label','Import','HandleVisibility','on','Separator','on','Enable','off');
+hImportNodeWeightsMenu = uimenu('Parent',hImportMenu,'Label','Node weights','HandleVisibility','on','Callback',@importNodeWeights);
+hExportMenu = uimenu('Parent',hFileMenu,'HandleVisibility','on','Label','Export','Enable','off');
+hExportImageMenuitem = uimenu('Parent',hExportMenu,'HandleVisibility','on','Label','Save topology as image','Callback',{@exportPlotCallback,''});
+hExportGephiMenuitem = uimenu('Parent',hExportMenu,'HandleVisibility','on','Label','Save Gephi csv','Callback',@exportGephiCSV);
+hExitMenu = uimenu('Parent',hFileMenu','Label','Exit','HandleVisibility','on','Separator','on','Callback', @closeGUI);
 
 % Edit menu
 hEditMenu = uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','Edit','Enable','off');
-    hUndoMenuitem = uimenu('Parent',hEditMenu,'Label','Undo','HandleVisibility','on','Callback', @undoPlot,'Enable','off','Accelerator','Z');
-    hRedoMenuitem = uimenu('Parent',hEditMenu,'Label','Redo','HandleVisibility','on','Callback', @redoPlot,'Enable','off','Accelerator','Y');
-    hResetFields = uimenu('Parent',hEditMenu,'Label','Reset fields','HandleVisibility','on','Callback', @resetFieldsHandle,'Accelerator','R');
-    hNodeOptionsMenu = uimenu('Parent',hEditMenu,'Label','Node options','HandleVisibility','on','Separator','on','Enable','off');
-        hToggleControllerItem = uimenu('Parent',hNodeOptionsMenu,'Label','Toggle Controller','HandleVisibility','on','Callback', @toggleController,'Accelerator','E','Separator','on');
-        hToggleControllerFailureItem = uimenu('Parent',hNodeOptionsMenu,'Label','Toggle Controller Failure','HandleVisibility','on','Callback', @toggleControllerFailure,'Accelerator','F');
-        hToggleNodeFailureItem = uimenu('Parent',hNodeOptionsMenu,'Label','Toggle Node Failure','HandleVisibility','on','Callback', @toggleNodeFailure,'Accelerator','G');
-    hEdgeOptionsMenu = uimenu('Parent',hEditMenu,'Label','Edge options','HandleVisibility','on');
-        hCreateEdgeMenuitem = uimenu('Parent',hEdgeOptionsMenu,'Label','Create edge','HandleVisibility','on','Callback',@createEdgeInput);
-        hDeleteEdgeMenuitem = uimenu('Parent',hEdgeOptionsMenu,'Label','Delete edge','HandleVisibility','on','Callback',@deleteEdgeInput);
-        hResetEdgeMenuitem = uimenu('Parent',hEdgeOptionsMenu,'Label','Reset edges','HandleVisibility','on','Callback',@resetEdges);
-    hNodeWeightsMenu = uimenu('Parent',hEditMenu,'Label','Node Weights','HandleVisibility','on');
-        hEditNodeWeightsMenuitem = uimenu('Parent',hNodeWeightsMenu,'Label','Edit','HandleVisibility','on','Callback',@editNodeWeightsInput);
-        hResetNodeWeightsMenuitem = uimenu('Parent',hNodeWeightsMenu,'Label','Reset','HandleVisibility','on','Callback',@resetNodeWeights);
-    hLatenciesMenu = uimenu('Parent',hEditMenu,'Label','Latencies','HandleVisibility','on');
-        hEditLatenciesMenuitem = uimenu('Parent',hLatenciesMenu,'Label','Edit','HandleVisibility','on','Callback',@editLatencies);
-        hResetLatenciesMenuitem = uimenu('Parent',hLatenciesMenu,'Label','Reset','HandleVisibility','on','Callback',@resetLatencies);
- 
-% Placements menu        
+hUndoMenuitem = uimenu('Parent',hEditMenu,'Label','Undo','HandleVisibility','on','Callback', @undoPlot,'Enable','off','Accelerator','Z');
+hRedoMenuitem = uimenu('Parent',hEditMenu,'Label','Redo','HandleVisibility','on','Callback', @redoPlot,'Enable','off','Accelerator','Y');
+hResetFields = uimenu('Parent',hEditMenu,'Label','Reset fields','HandleVisibility','on','Callback', @resetFieldsHandle,'Accelerator','R');
+hNodeOptionsMenu = uimenu('Parent',hEditMenu,'Label','Node options','HandleVisibility','on','Separator','on','Enable','off');
+hToggleControllerItem = uimenu('Parent',hNodeOptionsMenu,'Label','Toggle Controller','HandleVisibility','on','Callback', @toggleController,'Accelerator','E','Separator','on');
+hToggleControllerFailureItem = uimenu('Parent',hNodeOptionsMenu,'Label','Toggle Controller Failure','HandleVisibility','on','Callback', @toggleControllerFailure,'Accelerator','F');
+hToggleNodeFailureItem = uimenu('Parent',hNodeOptionsMenu,'Label','Toggle Node Failure','HandleVisibility','on','Callback', @toggleNodeFailure,'Accelerator','G');
+hEdgeOptionsMenu = uimenu('Parent',hEditMenu,'Label','Edge options','HandleVisibility','on');
+hCreateEdgeMenuitem = uimenu('Parent',hEdgeOptionsMenu,'Label','Create edge','HandleVisibility','on','Callback',@createEdgeInput);
+hDeleteEdgeMenuitem = uimenu('Parent',hEdgeOptionsMenu,'Label','Delete edge','HandleVisibility','on','Callback',@deleteEdgeInput);
+hResetEdgeMenuitem = uimenu('Parent',hEdgeOptionsMenu,'Label','Reset edges','HandleVisibility','on','Callback',@resetEdges);
+hNodeWeightsMenu = uimenu('Parent',hEditMenu,'Label','Node Weights','HandleVisibility','on');
+hEditNodeWeightsMenuitem = uimenu('Parent',hNodeWeightsMenu,'Label','Edit','HandleVisibility','on','Callback',@editNodeWeightsInput);
+hResetNodeWeightsMenuitem = uimenu('Parent',hNodeWeightsMenu,'Label','Reset','HandleVisibility','on','Callback',@resetNodeWeights);
+hLatenciesMenu = uimenu('Parent',hEditMenu,'Label','Latencies','HandleVisibility','on');
+hEditLatenciesMenuitem = uimenu('Parent',hLatenciesMenu,'Label','Edit','HandleVisibility','on','Callback',@editLatencies);
+hResetLatenciesMenuitem = uimenu('Parent',hLatenciesMenu,'Label','Reset','HandleVisibility','on','Callback',@resetLatencies);
+
+% Placements menu
 hPlacementsMenu  = uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','Placements','Enable','off');
-    hCalculatePlacementsMenu  =   uimenu('Parent',hPlacementsMenu,'Label','Calculate placements','HandleVisibility','on');
-        hFFMenuitem.base  =   uimenu('Parent',hCalculatePlacementsMenu,'Label','Failure free','HandleVisibility','on');
-        for i=1:5
-            hFFMenuitem.(['FFk' num2str(i)])  =   uimenu('Parent',hFFMenuitem.base,'Label',['k=' num2str(i)],'HandleVisibility','on','Callback',{@optimizeFailureFree,i});
-        end
-        hNMenuitem.base  =   uimenu('Parent',hCalculatePlacementsMenu,'Label','Up to two node failures','HandleVisibility','on');
-        for i=3:5
-            hNMenuitem.(['Nk' num2str(i)])  =   uimenu('Parent',hNMenuitem.base,'Label',['k=' num2str(i)],'HandleVisibility','on','Callback',{@optimizeNodeFailure,i});
-        end
-        hRMenuitem = uimenu('Parent',hNMenuitem.base,'Label','Find minimum resilient k','HandleVisibility','on','Callback',@findMinimumK);
-        hCMenuitem.base  =   uimenu('Parent',hCalculatePlacementsMenu,'Label','Up to k-1 controller failures','HandleVisibility','on');
-            for i=1:5
-            hCMenuitem.(['Ck' num2str(i)])  =   uimenu('Parent',hCMenuitem.base,'Label',['k=' num2str(i)],'HandleVisibility','on','Callback',{@optimizeControllerFailure,i});
-            end
-        hNodeWeightsMenuItem = uimenu('Parent',hCalculatePlacementsMenu,'Label','Use node weights','HandleVisibility','on','Checked','off','Separator','on','Callback', @toggleNodeWeights,'Visible','off','Enable','off');
-    hOpenPlacementsMenuitem  =   uimenu('Parent',hPlacementsMenu,'Label','Open...','HandleVisibility','on','Callback',@loadPlacementsCallback,'Separator','on');
-    hSavePlacementsMenuitem  =   uimenu('Parent',hPlacementsMenu,'Label','Save','HandleVisibility','on','Callback',@savePlacementsCallback,'Enable','off');
+hCalculatePlacementsMenu  =   uimenu('Parent',hPlacementsMenu,'Label','Calculate placements','HandleVisibility','on');
+hFFMenuitem.base  =   uimenu('Parent',hCalculatePlacementsMenu,'Label','Failure free','HandleVisibility','on');
+for i=1:5
+    hFFMenuitem.(['FFk' num2str(i)])  =   uimenu('Parent',hFFMenuitem.base,'Label',['k=' num2str(i)],'HandleVisibility','on','Callback',{@optimizeFailureFree,i});
+end
+hNMenuitem.base  =   uimenu('Parent',hCalculatePlacementsMenu,'Label','Up to two node failures','HandleVisibility','on');
+for i=3:5
+    hNMenuitem.(['Nk' num2str(i)])  =   uimenu('Parent',hNMenuitem.base,'Label',['k=' num2str(i)],'HandleVisibility','on','Callback',{@optimizeNodeFailure,i});
+end
+hRMenuitem = uimenu('Parent',hNMenuitem.base,'Label','Find minimum resilient k','HandleVisibility','on','Callback',@findMinimumK);
+hCMenuitem.base  =   uimenu('Parent',hCalculatePlacementsMenu,'Label','Up to k-1 controller failures','HandleVisibility','on');
+for i=1:5
+    hCMenuitem.(['Ck' num2str(i)])  =   uimenu('Parent',hCMenuitem.base,'Label',['k=' num2str(i)],'HandleVisibility','on','Callback',{@optimizeControllerFailure,i});
+end
+hNodeWeightsMenuItem = uimenu('Parent',hCalculatePlacementsMenu,'Label','Use node weights','HandleVisibility','on','Checked','off','Separator','on','Callback', @toggleNodeWeights,'Visible','off','Enable','off');
+hOpenPlacementsMenuitem  =   uimenu('Parent',hPlacementsMenu,'Label','Open...','HandleVisibility','on','Callback',@loadPlacementsCallback,'Separator','on');
+hSavePlacementsMenuitem  =   uimenu('Parent',hPlacementsMenu,'Label','Save','HandleVisibility','on','Callback',@savePlacementsCallback,'Enable','off');
 
 % View menu
 hViewMenu = uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','View','Enable','on');
-    hPlotOptionsMenu = uimenu('Parent',hViewMenu,'Label','Plot options','HandleVisibility','on','Enable','off');
-        hCheckBoxMenuIDs = uimenu('Parent',hPlotOptionsMenu,'Label','Node IDs','HandleVisibility','on','Visible','on','Callback',{@plotFiguresCallbackMenu,4},'Accelerator','4');
-        hCheckBoxMenuTM = uimenu('Parent',hPlotOptionsMenu,'Label','Node weights','HandleVisibility','on','Visible','on','Callback',{@plotFiguresCallbackMenu,6},'Accelerator','6');
-        hCheckBoxMenuDistNC = uimenu('Parent',hPlotOptionsMenu,'Label','<html>Max node to controller latency</html>','HandleVisibility','on','Visible','on','Callback',{@plotFiguresCallbackMenu,1},'Accelerator','1');
-        hCheckBoxMenuBalance = uimenu('Parent',hPlotOptionsMenu,'Label','<html>Controller imbalance</html>','HandleVisibility','on','Visible','on','Callback',{@plotFiguresCallbackMenu,2},'Accelerator','2');
-        hCheckBoxMenuDistCC = uimenu('Parent',hPlotOptionsMenu,'Label','<html>Max controller to controller latency</html>','HandleVisibility','on','Visible','on','Callback',{@plotFiguresCallbackMenu,3},'Accelerator','3');
-        hCheckBoxMenuHeatmap = uimenu('Parent',hPlotOptionsMenu,'Label','<html>Controller-less nodes heatmap</html>','HandleVisibility','on','Visible','on','Callback',@heatmapCheckCallbackMenu,'Accelerator','5');
-        hHierarchicalShowIconsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','Use icons','HandleVisibility','on','Visible','off','Checked','off','Callback',{@hierarchicalPlotOptionCallback,3});
-        hHierarchicalShowLinksMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','Links','HandleVisibility','on','Visible','off','Checked','off','Callback',{@hierarchicalPlotOptionCallback,4});
-        hHierarchicalShowBaseStationsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','Base Stations','HandleVisibility','on','Visible','off','Checked','off','Callback',{@hierarchicalPlotOptionCallback,5});
-        hHierarchicalShowAccessNodesMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','Access Nodes','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,6});
-        hHierarchicalShowSGWlocationsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','SGW locations','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,7});
-        hHierarchicalShowSGWsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','SGWs','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,8});
-        hHierarchicalShowVirtualSGWsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','Virtual SGWs','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,9},'Enable','off');
-        hHierarchicalShowMegaEventsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','MegaEvents','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,10},'Enable','off');
-        hHierarchicalShowMegaEventResourcesMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','MegaEvent Resources','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,11},'Enable','off');
-        hHierarchicalShowNeplusMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','NE+','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,12});
-    hPredefinedViewsMenu = uimenu('Parent',hViewMenu,'Label','Predefined views','HandleVisibility','on','Enable','off');
-        hViewMaxLatencyMenuitem = uimenu('Parent',hPredefinedViewsMenu,'Label','<html>Max node to controller latency only</html>','HandleVisibility','on','Callback',{@plotFiguresCallbackMenu,7},'Accelerator','7');
-        hViewImbalanceMenuitem = uimenu('Parent',hPredefinedViewsMenu,'Label','<html>Controller imbalance only</html>','HandleVisibility','on','Callback',{@plotFiguresCallbackMenu,8},'Accelerator','8');
-        hViewMaxLatencyCCMenuitem = uimenu('Parent',hPredefinedViewsMenu,'Label','<html>Max controller to controller latency only</html>','HandleVisibility','on','Callback',{@plotFiguresCallbackMenu,9},'Accelerator','9');
-        hViewControllerlessMenuitem = uimenu('Parent',hPredefinedViewsMenu,'Label','<html>Controller-less nodes heatmap only</html>','HandleVisibility','on','Callback',{@plotFiguresCallbackMenu,0},'Accelerator','0');
-    hThemesMenu = uimenu('Parent',hViewMenu,'Label','Themes','HandleVisibility','on','Enable','on','Separator','on');
-        hThemesClassicMenuitem = uimenu('Parent',hThemesMenu,'Label','Classic','HandleVisibility','on','Enable','on','Callback',{@changeThemeCallback,[1 1 1], [0 0 0]},'Checked','on','Accelerator','');
-        hThemesDarkMenuitem = uimenu('Parent',hThemesMenu,'Label','Dark','HandleVisibility','on','Enable','on','Callback',{@changeThemeCallback,[0.26 0.26 0.26],[0.8 0.8 0.8]},'Accelerator','K');
-    hViewModeMenu = uimenu('Parent',hViewMenu,'Label','Mode','HandleVisibility','on','Enable','on');
-        hFullViewMenuitem = uimenu('Parent',hViewModeMenu,'Label','Full','HandleVisibility','on','Callback',@fullViewCallback,'Checked','on','Accelerator','');
-        hCompactViewMenuitem = uimenu('Parent',hViewModeMenu,'Label','Compact','HandleVisibility','on','Callback',@compactViewCallback,'Accelerator','T');
-    hExtractMenuitem = uimenu('Parent',hViewMenu,'Label','Duplicate plot','HandleVisibility','on','Callback', @duplicatePlot,'Accelerator','D','Separator','on','Enable','off');
+hPlotOptionsMenu = uimenu('Parent',hViewMenu,'Label','Plot options','HandleVisibility','on','Enable','off');
+hCheckBoxMenuIDs = uimenu('Parent',hPlotOptionsMenu,'Label','Node IDs','HandleVisibility','on','Visible','on','Callback',{@plotFiguresCallbackMenu,4},'Accelerator','4');
+hCheckBoxMenuTM = uimenu('Parent',hPlotOptionsMenu,'Label','Node weights','HandleVisibility','on','Visible','on','Callback',{@plotFiguresCallbackMenu,6},'Accelerator','6');
+hCheckBoxMenuDistNC = uimenu('Parent',hPlotOptionsMenu,'Label','<html>Max node to controller latency</html>','HandleVisibility','on','Visible','on','Callback',{@plotFiguresCallbackMenu,1},'Accelerator','1');
+hCheckBoxMenuBalance = uimenu('Parent',hPlotOptionsMenu,'Label','<html>Controller imbalance</html>','HandleVisibility','on','Visible','on','Callback',{@plotFiguresCallbackMenu,2},'Accelerator','2');
+hCheckBoxMenuDistCC = uimenu('Parent',hPlotOptionsMenu,'Label','<html>Max controller to controller latency</html>','HandleVisibility','on','Visible','on','Callback',{@plotFiguresCallbackMenu,3},'Accelerator','3');
+hCheckBoxMenuHeatmap = uimenu('Parent',hPlotOptionsMenu,'Label','<html>Controller-less nodes heatmap</html>','HandleVisibility','on','Visible','on','Callback',@heatmapCheckCallbackMenu,'Accelerator','5');
+hHierarchicalShowIconsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','Use icons','HandleVisibility','on','Visible','off','Checked','off','Callback',{@hierarchicalPlotOptionCallback,3});
+hHierarchicalShowLinksMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','Links','HandleVisibility','on','Visible','off','Checked','off','Callback',{@hierarchicalPlotOptionCallback,4});
+hHierarchicalShowBaseStationsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','Base Stations','HandleVisibility','on','Visible','off','Checked','off','Callback',{@hierarchicalPlotOptionCallback,5});
+hHierarchicalShowAccessNodesMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','Access Nodes','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,6});
+hHierarchicalShowSGWlocationsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','SGW locations','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,7});
+hHierarchicalShowSGWsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','SGWs','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,8});
+hHierarchicalShowVirtualSGWsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','Virtual SGWs','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,9},'Enable','off');
+hHierarchicalShowMegaEventsMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','MegaEvents','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,10},'Enable','off');
+hHierarchicalShowMegaEventResourcesMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','MegaEvent Resources','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,11},'Enable','off');
+hHierarchicalShowNeplusMenuitem = uimenu('Parent',hPlotOptionsMenu,'Label','NE+','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,12});
+hPredefinedViewsMenu = uimenu('Parent',hViewMenu,'Label','Predefined views','HandleVisibility','on','Enable','off');
+hViewMaxLatencyMenuitem = uimenu('Parent',hPredefinedViewsMenu,'Label','<html>Max node to controller latency only</html>','HandleVisibility','on','Callback',{@plotFiguresCallbackMenu,7},'Accelerator','7');
+hViewImbalanceMenuitem = uimenu('Parent',hPredefinedViewsMenu,'Label','<html>Controller imbalance only</html>','HandleVisibility','on','Callback',{@plotFiguresCallbackMenu,8},'Accelerator','8');
+hViewMaxLatencyCCMenuitem = uimenu('Parent',hPredefinedViewsMenu,'Label','<html>Max controller to controller latency only</html>','HandleVisibility','on','Callback',{@plotFiguresCallbackMenu,9},'Accelerator','9');
+hViewControllerlessMenuitem = uimenu('Parent',hPredefinedViewsMenu,'Label','<html>Controller-less nodes heatmap only</html>','HandleVisibility','on','Callback',{@plotFiguresCallbackMenu,0},'Accelerator','0');
+hHierarchicalView1 = uimenu('Parent',hPredefinedViewsMenu,'Label','Assignment SGW','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,13},'Accelerator','1');
+hHierarchicalView2 = uimenu('Parent',hPredefinedViewsMenu,'Label','Assignment SGW no BS','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,14},'Accelerator','2');
+hHierarchicalView3 = uimenu('Parent',hPredefinedViewsMenu,'Label','Mega Events + SGW','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,15},'Accelerator','3');
+hHierarchicalView4 = uimenu('Parent',hPredefinedViewsMenu,'Label','Basic','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,16},'Accelerator','4');
+hHierarchicalViewLatStat = uimenu('Parent',hPredefinedViewsMenu,'Label','Static - Latency','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,17},'Accelerator','5');
+hHierarchicalViewBalStat = uimenu('Parent',hPredefinedViewsMenu,'Label','Static - Assignment','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,18},'Accelerator','6');
+hHierarchicalViewLatDyn = uimenu('Parent',hPredefinedViewsMenu,'Label','Dynamic - Latency','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,19},'Accelerator','7');
+hHierarchicalViewBalDyn = uimenu('Parent',hPredefinedViewsMenu,'Label','Dynamic - Assignment','HandleVisibility','on','Visible','off','Callback',{@hierarchicalPlotOptionCallback,20},'Accelerator','8');
+hThemesMenu = uimenu('Parent',hViewMenu,'Label','Themes','HandleVisibility','on','Enable','on','Separator','on');
+hThemesClassicMenuitem = uimenu('Parent',hThemesMenu,'Label','Classic','HandleVisibility','on','Enable','on','Callback',{@changeThemeCallback,[1 1 1], [0 0 0]},'Checked','on','Accelerator','');
+hThemesDarkMenuitem = uimenu('Parent',hThemesMenu,'Label','Dark','HandleVisibility','on','Enable','on','Callback',{@changeThemeCallback,[0.26 0.26 0.26],[0.8 0.8 0.8]},'Accelerator','K');
+hViewModeMenu = uimenu('Parent',hViewMenu,'Label','Mode','HandleVisibility','on','Enable','on');
+hFullViewMenuitem = uimenu('Parent',hViewModeMenu,'Label','Full','HandleVisibility','on','Callback',@fullViewCallback,'Checked','on','Accelerator','');
+hCompactViewMenuitem = uimenu('Parent',hViewModeMenu,'Label','Compact','HandleVisibility','on','Callback',@compactViewCallback,'Accelerator','T');
+hExtractMenuitem = uimenu('Parent',hViewMenu,'Label','Duplicate plot','HandleVisibility','on','Callback', @duplicatePlot,'Accelerator','D','Separator','on','Enable','off');
 
 % PLC Menu
 hPLCMenu      =   uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','POCO PLC','Visible','on','Enable','off');
-    hInitPLCMenuitem = uimenu('Parent',hPLCMenu,'Label','Start POCO PLC','HandleVisibility','on','Callback',@InitPOCOPLC,'Accelerator','P');
-    hStopPLCMenuitem = uimenu('Parent',hPLCMenu,'Label','Stop POCO PLC','HandleVisibility','on','Callback',@StopPOCOPLC,'Visible','off');
-    hLoadHistPLCMenuitem = uimenu('Parent',hPLCMenu,'Label','Load history...','HandleVisibility','on','Callback',@loadPLCHistory,'Visible','off','Separator','on');
-    hSaveHistPLCMenuitem = uimenu('Parent',hPLCMenu,'Label','Save Planetlab history','HandleVisibility','on','Callback',@savePLCHistoryCallback,'Visible','off','Enable','off');
-    hStartPlanetlabPlotLoopMenuitem  =   uimenu('Parent',hPLCMenu,'Label','Start Planetlab Plot Loop','HandleVisibility','on','Callback', {@startPLCLoopCallback},'Accelerator','#','Enable','off','Visible','off','Separator','on');
-    hStopPlanetlabPlotLoopMenuitem  =   uimenu('Parent',hPLCMenu,'Label','Stop Planetlab Plot Loop','HandleVisibility','on','Callback', {@stopPLCLoopCallback},'Accelerator','-','Enable','off','Visible','off');
-    hStartPlanetlabCalcLoopMenuitem  =   uimenu('Parent',hPLCMenu,'Label','Start Planetlab Calc Loop','HandleVisibility','on','Callback', {@startPLCCalcCallback},'Accelerator','#','Enable','off','Visible','off');
-    hStopPlanetlabCalcLoopMenuitem  =   uimenu('Parent',hPLCMenu,'Label','Stop Planetlab Calc Loop','HandleVisibility','on','Callback', {@stopPLCCalcCallback},'Accelerator','-','Enable','off','Visible','off');
-    hFetchPlanetlabDataMenuitem  =   uimenu('Parent',hPLCMenu,'Label','Fetch Planetlab Data','HandleVisibility','on','Callback', {@fetchPLCdataCallback},'Accelerator','U','Visible','off');
+hInitPLCMenuitem = uimenu('Parent',hPLCMenu,'Label','Start POCO PLC','HandleVisibility','on','Callback',@InitPOCOPLC,'Accelerator','P');
+hStopPLCMenuitem = uimenu('Parent',hPLCMenu,'Label','Stop POCO PLC','HandleVisibility','on','Callback',@StopPOCOPLC,'Visible','off');
+hLoadHistPLCMenuitem = uimenu('Parent',hPLCMenu,'Label','Load history...','HandleVisibility','on','Callback',@loadPLCHistory,'Visible','off','Separator','on');
+hSaveHistPLCMenuitem = uimenu('Parent',hPLCMenu,'Label','Save Planetlab history','HandleVisibility','on','Callback',@savePLCHistoryCallback,'Visible','off','Enable','off');
+hStartPlanetlabPlotLoopMenuitem  =   uimenu('Parent',hPLCMenu,'Label','Start Planetlab Plot Loop','HandleVisibility','on','Callback', {@startPLCLoopCallback},'Accelerator','#','Enable','off','Visible','off','Separator','on');
+hStopPlanetlabPlotLoopMenuitem  =   uimenu('Parent',hPLCMenu,'Label','Stop Planetlab Plot Loop','HandleVisibility','on','Callback', {@stopPLCLoopCallback},'Accelerator','-','Enable','off','Visible','off');
+hStartPlanetlabCalcLoopMenuitem  =   uimenu('Parent',hPLCMenu,'Label','Start Planetlab Calc Loop','HandleVisibility','on','Callback', {@startPLCCalcCallback},'Accelerator','#','Enable','off','Visible','off');
+hStopPlanetlabCalcLoopMenuitem  =   uimenu('Parent',hPLCMenu,'Label','Stop Planetlab Calc Loop','HandleVisibility','on','Callback', {@stopPLCCalcCallback},'Accelerator','-','Enable','off','Visible','off');
+hFetchPlanetlabDataMenuitem  =   uimenu('Parent',hPLCMenu,'Label','Fetch Planetlab Data','HandleVisibility','on','Callback', {@fetchPLCdataCallback},'Accelerator','U','Visible','off');
 
 % Hierarchical-Review Menu
 hHierarchicalMenu = uimenu('Parent',hMainFigure,'Label','SGW placement','HandleVisibility','on','Visible','on');
-    hInitHierarchicalMenuitem = uimenu('Parent',hHierarchicalMenu,'Label','Start','HandleVisibility','on','Visible','on','Callback',@initHierarchical);
-    hstopHierarchicalMenuitem = uimenu('Parent',hHierarchicalMenu,'Label','Stop','HandleVisibility','on','Visible','off','Callback',@stopHierarchicalCallback);
-    hresetHierarchicalMenuitem = uimenu('Parent',hHierarchicalMenu,'Label','Reset','HandleVisibility','on','Visible','off','Enable','off','Callback',@resetHierarchicalCallback);
-    hMegaEventsMenu = uimenu('Parent',hHierarchicalMenu,'Label','Place Mega Events','HandleVisibility','on','Visible','off','Separator','on');
-        hPlacePredefinedMenuitem = uimenu('Parent',hMegaEventsMenu,'Label','Load placements...','HandleVisibility','on','Visible','on','Callback',@loadPredefinedMegaEventsCallback);
-        hPlaceManualMenuitem = uimenu('Parent',hMegaEventsMenu,'Label','Manual','HandleVisibility','on','Visible','on','Callback',@placeMegaEventsManualCallback);
-        hPlaceAutoMenuitem = uimenu('Parent',hMegaEventsMenu,'Label','Random','HandleVisibility','on','Visible','on','Callback',@placeRandomMegaEvents);
-    hSaveMegaEventsMenuitem = uimenu('Parent',hHierarchicalMenu,'Label','Save Mega Events','HandleVisibility','on','Visible','off','Enable','off','Callback',@saveMegaEventsCallback);
-    hHierarchicalPlotMetricsMenu = uimenu('Parent',hHierarchicalMenu,'Label','Metrics','HandleVisibility','on','Visible','off','Enable','on');
-        hHierarchicalShowLatencyMenuitem = uimenu('Parent',hHierarchicalPlotMetricsMenu,'Label','Latency','HandleVisibility','on','Visible','on','Checked','off','Callback',{@hierarchicalPlotOptionCallback,1},'Enable','on');
-        hHierarchicalShowAssociationsMenuitem = uimenu('Parent',hHierarchicalPlotMetricsMenu,'Label','BS-SGW assignment','HandleVisibility','on','Visible','on','Checked','off','Callback',{@hierarchicalPlotOptionCallback,2});
-    hPlanningMenuitem = uimenu('Parent',hHierarchicalMenu,'Label','Start Planning','HandleVisibility','on','Visible','off','Enable','off','Callback',@startPlanningCallback,'Separator','on');
+hInitHierarchicalMenuitem = uimenu('Parent',hHierarchicalMenu,'Label','Start','HandleVisibility','on','Visible','on','Callback',@initHierarchical);
+hstopHierarchicalMenuitem = uimenu('Parent',hHierarchicalMenu,'Label','Stop','HandleVisibility','on','Visible','off','Callback',@stopHierarchicalCallback);
+hresetHierarchicalMenuitem = uimenu('Parent',hHierarchicalMenu,'Label','Reset','HandleVisibility','on','Visible','off','Enable','off','Callback',@resetHierarchicalCallback);
+hMegaEventsMenu = uimenu('Parent',hHierarchicalMenu,'Label','Place Mega Events','HandleVisibility','on','Visible','off','Separator','on');
+hPlacePredefinedMenuitem = uimenu('Parent',hMegaEventsMenu,'Label','Load placements...','HandleVisibility','on','Visible','on','Callback',@loadPredefinedMegaEventsCallback);
+hPlaceManualMenuitem = uimenu('Parent',hMegaEventsMenu,'Label','Manual','HandleVisibility','on','Visible','on','Callback',@placeMegaEventsManual);
+hPlaceAutoMenuitem = uimenu('Parent',hMegaEventsMenu,'Label','Random','HandleVisibility','on','Visible','on','Callback',@placeRandomMegaEvents);
+hSaveMegaEventsMenuitem = uimenu('Parent',hHierarchicalMenu,'Label','Save Mega Events','HandleVisibility','on','Visible','off','Enable','off','Callback',@saveMegaEventsCallback);
+hHierarchicalPlotMetricsMenu = uimenu('Parent',hHierarchicalMenu,'Label','Metrics','HandleVisibility','on','Visible','off','Enable','on');
+hHierarchicalShowLatencyMenuitem = uimenu('Parent',hHierarchicalPlotMetricsMenu,'Label','Latency','HandleVisibility','on','Visible','on','Checked','off','Callback',{@hierarchicalPlotOptionCallback,1},'Enable','on');
+hHierarchicalShowAssociationsMenuitem = uimenu('Parent',hHierarchicalPlotMetricsMenu,'Label','BS-SGW assignment','HandleVisibility','on','Visible','on','Checked','off','Callback',{@hierarchicalPlotOptionCallback,2});
+hPlanningMenuitem = uimenu('Parent',hHierarchicalMenu,'Label','Start Planning','HandleVisibility','on','Visible','off','Enable','off','Callback',@startPlanningCallback,'Separator','on');
 
 % Help menu
 hHelpMenu = uimenu('Parent',hMainFigure,'HandleVisibility','on','Label','Help');
-    hOnlinHelpMenu = uimenu('Parent',hHelpMenu,'Label','Open online help','HandleVisibility','on','Callback', @openOnlineHelp);
-    hAboutMenu = uimenu('Parent',hHelpMenu,'Label','About','HandleVisibility','on','Callback', @openAbout);
+hOnlinHelpMenu = uimenu('Parent',hHelpMenu,'Label','Open online help','HandleVisibility','on','Callback', @openOnlineHelp);
+hAboutMenu = uimenu('Parent',hHelpMenu,'Label','About','HandleVisibility','on','Callback', @openAbout);
 
 
 % hPlotAxes1 Controls
@@ -374,8 +383,6 @@ mValues2={'<html><font size="2">Number of virtual SGWs</font></html>', 'numberOf
 planningValues={'<html><font size="2">Maximum latency between base stations and SGW</font></html>', 'maxLatencyN2C',['Maximum latency between',10,'base stations and SGW'];...
     '<html><font size="2">Average latency between base stations and SGW</font></html>', 'avgLatencyN2C',['Average latency between',10,'base stations and SGW']};
 
-%STRONGEST = struct;
-
 % Global variables for hierarchical topologies
 baseX=[];
 baseY=[];
@@ -398,16 +405,13 @@ neplusImg = '';
 sgwLight='';
 sgwVirtual='';
 neplusLight = '';
-% load('nodes.mat');
-% baseX=[baseX{1:end}];
-% baseY=[baseY{1:end}];
 
 
 %----------------------------------------------------------------------
 % Stops the functionality for hierarchical topologies
 
     function stopHierarchicalCallback(hObject, eventdata)
-       stopHierarchical; 
+        stopHierarchical;
     end
 
     function stopHierarchical
@@ -498,6 +502,11 @@ neplusLight = '';
         set(hCheckBoxMenuHeatmap,'Visible','on');
         set(hExportMenu,'Enable','off');
         set(hExportGephiMenuitem,'Enable','on');
+        set(hPredefinedViewsMenu,'Enable','off');
+        set(hViewMaxLatencyMenuitem,'Visible','on');
+        set(hViewImbalanceMenuitem,'Visible','on');
+        set(hViewMaxLatencyCCMenuitem,'Visible','on');
+        set(hViewControllerlessMenuitem,'Visible','on');
         isBusy(0);
         reset;
     end
@@ -505,7 +514,7 @@ neplusLight = '';
 %----------------------------------------------------------------------
 % Deletes all placed Mega Events and restores the initial setup of the plot
     function resetHierarchicalCallback(hObject, eventdata)
-       resetHierarchical; 
+        resetHierarchical;
     end
 
     function resetHierarchical
@@ -544,14 +553,18 @@ neplusLight = '';
         set(hHierarchicalShowSGWsMenuitem,'Checked','off');
         set(hPanelAxes1,'Visible','on');
         set(hCheckLinks,'Value',1);
-        set(hHierarchicalShowLinksMenuitem,'Checked','on');       
+        set(hHierarchicalShowLinksMenuitem,'Checked','on');
         set(hSaveMegaEventsMenuitem,'Enable','off');
         set(hPlanningButton,'Enable','off');
         set(hPlanningMenuitem,'Enable','off');
+        set(hHierarchicalViewLatDyn,'Visible','off');
+        set(hHierarchicalViewBalDyn,'Visible','off');
+        set(hHierarchicalView3,'Visible','off');
+        set(hHierarchicalView4,'Visible','off');
         if ~isempty(topology)
             resetMegaEvents;
         end
-    end 
+    end
 
 %----------------------------------------------------------------------
 % Starts the functionality for hierarchical topologies
@@ -615,7 +628,7 @@ neplusLight = '';
         set(hCheckBoxMenuDistNC,'Visible','off');
         set(hCheckBoxMenuBalance,'Visible','off');
         set(hCheckBoxMenuDistCC,'Visible','off');
-        set(hCheckBoxMenuHeatmap,'Visible','off'); 
+        set(hCheckBoxMenuHeatmap,'Visible','off');
         set(hPlotOptionsMenu,'Enable','on');
         set(hExportMenu,'Enable','on');
         set(hExportGephiMenuitem,'Enable','off');
@@ -627,12 +640,18 @@ neplusLight = '';
         neplusLight = imread('neplus_light.png');
         compactView;
         set(gcf,'Pointer','watch');
+        set(hPredefinedViewsMenu,'Enable','on');
+        set(hViewMaxLatencyMenuitem,'Visible','off');
+        set(hViewImbalanceMenuitem,'Visible','off');
+        set(hViewMaxLatencyCCMenuitem,'Visible','off');
+        set(hViewControllerlessMenuitem,'Visible','off');
+        set(hHierarchicalView1,'Visible','on');
+        set(hHierarchicalView2,'Visible','on');
+        set(hHierarchicalViewLatStat,'Visible','on');
+        set(hHierarchicalViewBalStat,'Visible','on');
+
         if isempty(topology)
-%            [STRONGEST]=loadSTRONGEST('topologies/STRONGEST_coreonly.mat');
-             [coordinates, topology, citynodes, sgwnodesstatic, neplusnodes, neplusnodesNOSGW, baseX, baseY, corenodes, distanceMatrix] = loadHierarchical('topologies/hierarchicalTopology.mat');
-%             coordinates=STRONGEST.coordinates;
-%             distanceMatrix=STRONGEST.distanceMatrix;
-%             topology=STRONGEST.topology;
+            [coordinates, topology, citynodes, sgwnodesstatic, neplusnodes, neplusnodesNOSGW, baseX, baseY, corenodes, distanceMatrix] = loadHierarchical('topologies/hierarchicalTopology.mat');
         end
         plotLinks;
         plotBaseStations(0);
@@ -674,7 +693,6 @@ neplusLight = '';
 % topologies when an option in the menu is selected
     function hierarchicalPlotOptionCallback(hObject, eventdata, k)
         updateHierarchicalCheckBoxes(k);
-        updatePlotAxes1; 
         updateHierarchicalPlotOptions;
     end
 
@@ -707,11 +725,112 @@ neplusLight = '';
                 set(hCheckMegaEventResources,'Value',~get(hCheckMegaEventResources,'Value'));
             case 12
                 set(hCheckNeplus,'Value',~get(hCheckNeplus,'Value'));
+            case 13
+                set(hCheckLatency,'Value',0);
+                set(hCheckAssignment,'Value',1);
+                set(hCheckLinks,'Value',1);
+                set(hCheckBaseStations,'Value',1);
+                set(hCheckAccessNodes,'Value',1);
+                set(hCheckSGWlocations,'Value',0);
+                set(hCheckSGWs,'Value',1);
+                set(hCheckVirtualSGWs,'Value',0);
+                set(hCheckMegaEvents,'Value',0);
+                set(hCheckMegaEventResources,'Value',0);
+                set(hCheckNeplus,'Value',0);
+                set(hCheckIcons,'Value',1);
+            case 14
+                set(hCheckLatency,'Value',0);
+                set(hCheckAssignment,'Value',1);
+                set(hCheckLinks,'Value',1);
+                set(hCheckBaseStations,'Value',0);
+                set(hCheckAccessNodes,'Value',1);
+                set(hCheckSGWlocations,'Value',0);
+                set(hCheckSGWs,'Value',1);
+                set(hCheckVirtualSGWs,'Value',0);
+                set(hCheckMegaEvents,'Value',0);
+                set(hCheckMegaEventResources,'Value',0);
+                set(hCheckNeplus,'Value',0);
+                set(hCheckIcons,'Value',1);
+            case 15
+                set(hCheckLatency,'Value',0);
+                set(hCheckAssignment,'Value',0);
+                set(hCheckLinks,'Value',1);
+                set(hCheckBaseStations,'Value',0);
+                set(hCheckAccessNodes,'Value',0);
+                set(hCheckSGWlocations,'Value',0);
+                set(hCheckSGWs,'Value',1);
+                set(hCheckVirtualSGWs,'Value',0);
+                set(hCheckMegaEvents,'Value',1);
+                set(hCheckMegaEventResources,'Value',0);
+                set(hCheckNeplus,'Value',0);
+                set(hCheckIcons,'Value',1);
+            case 16
+                set(hCheckLatency,'Value',0);
+                set(hCheckAssignment,'Value',0);
+                set(hCheckLinks,'Value',1);
+                set(hCheckBaseStations,'Value',0);
+                set(hCheckAccessNodes,'Value',0);
+                set(hCheckSGWlocations,'Value',0);
+                set(hCheckSGWs,'Value',1);
+                set(hCheckVirtualSGWs,'Value',0);
+                set(hCheckMegaEvents,'Value',1);
+                set(hCheckMegaEventResources,'Value',1);
+                set(hCheckNeplus,'Value',0);
+                set(hCheckIcons,'Value',1);
+            case 17
+                set(hCheckLatency,'Value',1);
+                set(hCheckAssignment,'Value',0);
+                set(hCheckLinks,'Value',1);
+                set(hCheckBaseStations,'Value',1);
+                set(hCheckAccessNodes,'Value',1);
+                set(hCheckSGWlocations,'Value',0);
+                set(hCheckSGWs,'Value',1);
+                set(hCheckVirtualSGWs,'Value',0);
+                set(hCheckMegaEvents,'Value',0);
+                set(hCheckMegaEventResources,'Value',0);
+                set(hCheckNeplus,'Value',0);
+            case 18
+                set(hCheckLatency,'Value',0);
+                set(hCheckAssignment,'Value',1);
+                set(hCheckLinks,'Value',1);
+                set(hCheckBaseStations,'Value',1);
+                set(hCheckAccessNodes,'Value',1);
+                set(hCheckSGWlocations,'Value',0);
+                set(hCheckSGWs,'Value',1);
+                set(hCheckVirtualSGWs,'Value',0);
+                set(hCheckMegaEvents,'Value',0);
+                set(hCheckMegaEventResources,'Value',0);
+                set(hCheckNeplus,'Value',0);
+            case 19
+                set(hCheckLatency,'Value',1);
+                set(hCheckAssignment,'Value',0);
+                set(hCheckLinks,'Value',1);
+                set(hCheckBaseStations,'Value',0);
+                set(hCheckAccessNodes,'Value',0);
+                set(hCheckSGWlocations,'Value',0);
+                set(hCheckSGWs,'Value',0);
+                set(hCheckVirtualSGWs,'Value',1);
+                set(hCheckMegaEvents,'Value',1);
+                set(hCheckMegaEventResources,'Value',1);
+                set(hCheckNeplus,'Value',0);
+            case 20
+                set(hCheckLatency,'Value',0);
+                set(hCheckAssignment,'Value',1);
+                set(hCheckLinks,'Value',1);
+                set(hCheckBaseStations,'Value',0);
+                set(hCheckAccessNodes,'Value',0);
+                set(hCheckSGWlocations,'Value',0);
+                set(hCheckSGWs,'Value',1);
+                set(hCheckVirtualSGWs,'Value',1);
+                set(hCheckMegaEvents,'Value',1);
+                set(hCheckMegaEventResources,'Value',1);
+                set(hCheckNeplus,'Value',0);
         end
+        updatePlotAxes1;
     end
 
 %----------------------------------------------------------------------
-% Disables or enables the plot option controls during the plot is being 
+% Disables or enables the plot option controls during the plot is being
 % updated
     function disableOptions(bool)
         value={'on','off'};
@@ -738,7 +857,7 @@ neplusLight = '';
 % Updates the topology plot according to the set plot options
 
     function updatePlotAxes1Callback(hObject, eventdata)
-       updatePlotAxes1; 
+        updatePlotAxes1;
     end
 
     function updatePlotAxes1
@@ -783,10 +902,10 @@ neplusLight = '';
             plotMegaEventResources(assignment,latency);
         end
         if showSGWs
-           plotSGWs(assignment,showIcons);
+            plotSGWs(assignment,showIcons);
         end
         if showMegaEvents
-           plotMegaEvents;
+            plotMegaEvents;
         end
         set(gcf,'Pointer','arrow');
         isBusy(0);
@@ -852,10 +971,11 @@ neplusLight = '';
 %----------------------------------------------------------------------
 % Places ten Mega Events randomly on the topology
     function placeRandomMegaEvents(hObject, event)
+        planned=0;
         set(hPlanningButton,'Enable','on');
         resetMegaEvents;
         set(hPlanningMenuitem,'Enable','on');
-        numMegaEvents=10;
+        numMegaEvents=5;
         xmin=min(coordinates(:,1))
         xmax=max(coordinates(:,1))
         ymin=min(coordinates(:,2))
@@ -867,8 +987,10 @@ neplusLight = '';
         locY=locY(1:min(numMegaEvents,length(locY)));
         [newBSX,newBSY]=createBaseStations([locX;locY],4000,10);
         [newBSX,newBSY]=advancedFilterPoints(coordinates,newBSX,newBSY,2000,5);
+        set(hCheckMegaEventResources,'Enable','on');
+        set(hCheckMegaEventResources,'Value',1);
         plotMegaEvents;
-        calculateMegaEventResources;
+        plotMegaEventResourcesBeforePlanning;
     end
 
 %----------------------------------------------------------------------
@@ -883,9 +1005,9 @@ neplusLight = '';
     end
 
     function saveMegaEvents(file)
-       save(file, '-mat','numMegaEvents','newBSX','newBSY','locX','locY') 
-    end    
- 
+        save(file, '-mat','numMegaEvents','newBSX','newBSY','locX','locY')
+    end
+
 %----------------------------------------------------------------------
 % Loads a file containing a predefined Mega Event placement
     function loadPredefinedMegaEventsCallback(hObject, eventdata)
@@ -899,12 +1021,16 @@ neplusLight = '';
     end
 
     function loadPredefinedMegaEvents(file)
+        planned=0;
         resetMegaEvents;
         set(hPlanningMenuitem,'Enable','on');
         set(hPlanningButton,'Enable','on');
         [locX,locY,newBSX,newBSY,numMegaEvents] = loadMegaEvents(file);
+        set(hCheckMegaEventResources,'Enable','on');
+%         set(hCheckMegaEventResources,'Value',1);
+        updateHierarchicalCheckBoxes(16);
         plotMegaEvents;
-        calculateMegaEventResources;
+        plotMegaEventResourcesBeforePlanning;
     end
 
     function [locX,locY,newBSX,newBSY,numMegaEvents] = loadMegaEvents(filename)
@@ -921,64 +1047,50 @@ neplusLight = '';
         end
     end
 
-    function [STRONGEST] = loadSTRONGEST(filename)
-        if exist(filename,'file')
-            load(filename);
-        end
-    end
-
-%----------------------------------------------------------------------
-% Opens a dialog to ask the user how many Mega Events he wants to place
-
-    function placeMegaEventsManualCallback(hObject, eventdata)
-        inputFig = figure('MenuBar','none','Toolbar','none','HandleVisibility','on','Name', 'Place Mega Events','NumberTitle','off','Position', [(screensize(3)/2 - 150), (screensize(4)/2 - 70), 300, 150],'Resize','on','Color','w');
-        hLabelHead = uicontrol('Parent',inputFig,'Units','pixel','HorizontalAlignment','left','Position',[0 100 300 50],...
-            'String','Please insert the number of Mega Events you want to place.','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','on','FontWeight','bold');
-        hLabelNumEvents = uicontrol('Parent',inputFig,'Units','pixel','HorizontalAlignment','left','Position',[0 80 150 30],...
-            'String','Number of Mega Events:','Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','on','FontWeight','bold');
-        hEditNumEvents = uicontrol('Parent',inputFig,'Units','pixel','HorizontalAlignment','left','Position',[150 90 150 20],...
-            'Style','edit','BackgroundColor','w','HandleVisibility','on','Visible','on','String','3');
-        hButtonSave = uicontrol('Parent',inputFig,'Units','pixel','Position',[40 10 100 30],'HandleVisibility','on','Visible','on','String','Place Mega Events','Style','pushbutton','HorizontalAlignment','right','Callback',{@checkInputNum,hEditNumEvents,inputFig});
-        hButtonCancel = uicontrol('Parent',inputFig,'Units','pixel','Position',[160 10 100 30],'HandleVisibility','on','Visible','on','String','Cancel','Style','pushbutton','HorizontalAlignment','right','Callback',{@closeFig,inputFig});
-        
-        function checkInputNum(hObject, eventdata,hEditNumEvents,inputFig)
-            if isnumeric(str2num(get(hEditNumEvents,'String'))) && ~isempty(str2num(get(hEditNumEvents,'String')))
-                placeMegaEventsManual(hEditNumEvents,inputFig);
-            else
-                errordlg('Invalid input! Please insert a number!','Error! Invalid input!');
-            end
-        end
-    end
-
 %----------------------------------------------------------------------
 % Lets the user choose places for Mega Events in the network area
-    function placeMegaEventsManual(inputNumEvents, oldInputFig)
+    function placeMegaEventsManual(hObject, eventdata)
+        planned=0;
         resetMegaEvents;
-        numMegaEvents = get(inputNumEvents,'String');
-        close(oldInputFig);
         axes(hPlotAxes1);
         hold on;
-        uiwait(helpdlg('Please choose the places for the Mega Events on the map','Place Mega Events manual'));
-        for i=1:str2num(numMegaEvents)
+        uiwait(helpdlg('Please choose the places for the Mega Events on the map. If done, please click anywhere outside the map.','Place Mega Events manual'));
+        set(hCheckMegaEventResources,'Enable','on');
+        set(hCheckMegaEventResources,'Value',1);
+        baseXn={};
+        baseYn={};
+        insideX=inf;
+        i=1;
+        while ~isempty(insideX)
             [locXtmp locYtmp] = ginput(1);
-            locX(i)=locXtmp;
-            locY(i)=locYtmp;
-            plotMegaEvents;
+            insideX=advancedFilterPoints(coordinates,locXtmp,locYtmp,2000,5);
+            if isempty(insideX)
+                continue;
+            else
+                locX(i)=locXtmp;
+                locY(i)=locYtmp;
+                [baseXn{i},baseYn{i}]=createBaseStations([locX(i);locY(i)],4000,10);
+                plotMegaEvents;
+                newBSX=[baseXn{:}];
+                newBSY=[baseYn{:}];
+                [newBSX,newBSY]=advancedFilterPoints(coordinates,newBSX,newBSY,2000,5);
+                plotMegaEventResourcesBeforePlanning;
+                i=i+1;
+            end
         end
         if ~isempty(locX)
-            locX=locX(1:min(numMegaEvents,length(locX)));
-            locY=locY(1:min(numMegaEvents,length(locY)));
-            [newBSX,newBSY]=createBaseStations([locX;locY],4000,10);
-            [newBSX,newBSY]=advancedFilterPoints(coordinates,newBSX,newBSY,2000,5);
-            calculateMegaEventResources;
             set(hPlanningButton,'Enable','on');
         end
     end
- 
+
 
 %----------------------------------------------------------------------
-%
+% Initiates the calculation of the Mega Event resources
     function startPlanningCallback(hObject, eventdata)
+        if ~isempty(str2num(get(hEditLatency,'String')))
+            highLatency=str2num(get(hEditLatency,'String'));
+        end
+        calculateMegaEventResources;
         planned=1;
         set(hXAxisPopupMenuHierarchical,'String',mValues2(1:3,1));
         set(hYAxisPopupMenuHierarchical,'String',mValues2(1:3,1));
@@ -993,8 +1105,9 @@ neplusLight = '';
         end
         valuex=char(mValues2{get(hXAxisPopupMenuHierarchical,'Value'),2});
         valuey=char(mValues2{get(hYAxisPopupMenuHierarchical,'Value'),2});
+        updateHierarchicalCheckBoxes(20);
         updatePlotAxes1;
-        plotVirtualSGWs(nk,get(hCheckIcons,'Value'));  
+        plotVirtualSGWs(nk,get(hCheckIcons,'Value'));
         start(plotParetoTimer);
     end
 
@@ -1009,6 +1122,8 @@ neplusLight = '';
         set(hCheckLatency,'Enable','on');
         set(hEditLatency,'Enable','on');
         set(hCheckVirtualSGWs,'Value',1);
+        set(hHierarchicalViewLatDyn,'Visible','on');
+        set(hHierarchicalViewBalDyn,'Visible','on');
         set(hCheckMegaEventResources,'Value',1);
         sgwnodes=neplusnodesNOSGW(idx);
         [imgH, imgW, tildevar] = size(sgwVirtual);
@@ -1018,8 +1133,8 @@ neplusLight = '';
             end
         end
         mycolors=repmat(hsv(4),ceil(length(sgwnodes)/4),1);
-        for i=1:length(sgwnodes)      
-        	plot(coordinates(sgwnodes(i),1),coordinates(sgwnodes(i),2),'o','MarkerFaceColor',mycolors(i,:),'MarkerSize',14,'Color',darken(mycolors(i,:)),'LineWidth',2,'LineSmoothing','off','Parent',gca)
+        for i=1:length(sgwnodes)
+            plot(coordinates(sgwnodes(i),1),coordinates(sgwnodes(i),2),'o','MarkerFaceColor',mycolors(i,:),'MarkerSize',14,'Color',darken(mycolors(i,:)),'LineWidth',2,'LineSmoothing','off','Parent',gca)
         end
         isBusy(0);
     end
@@ -1031,33 +1146,41 @@ neplusLight = '';
         assignmentIdx=calculateBaseStationAssignment(coordinates,citynodes,newBSX,newBSY);
         mycolors=repmat(hsv(10),ceil(length(citynodes)/10),1);
         if matlabVersion < 2013
-        	dist=distanceMatrix(citynodes(unique(assignmentIdx)),neplusnodesNOSGW);
+            dist=distanceMatrix(citynodes(unique(assignmentIdx)),neplusnodesNOSGW);
         else
-        	dist=distanceMatrix(citynodes(unique(assignmentIdx,'legacy')),neplusnodesNOSGW);
+            dist=distanceMatrix(citynodes(unique(assignmentIdx,'legacy')),neplusnodesNOSGW);
         end
         a=1;
         k=0;
         solutionAll=repmat(struct('numberOfControllers',[],'failureType','','nk',[],'maxNumberOfControllerlessNodes',[],'avgLatencyN2C',[],'maxLatencyN2C',[],'avgLatencyC2C',[],'maxLatencyC2C',[],'controllerImbalance',[]),1,4);
-        while a > 0.3 && k<4
-        	k=k+1;
-            solution=evaluateSingleInstanceHierarchical(dist,k);
-            solutionAll(k)=solution;
-            solutionAll(k).numberOfControllers= k*ones(size(solution.maxLatencyN2C));
-            [a,b]=min(solution.maxLatencyN2C);
-        end
-        tmp=0;
-        if b > max(size(solutionAll(1).nk))
-         	tmp=b+max(size(solutionAll(1).nk));
-            if tmp > max(size(solutionAll(2).nk))
-                tmp=tmp+max(size(solutionAll(2).nk));
-                if tmp > max(size(solutionAll(3).nk))
-                	tmp=tmp+max(size(solutionAll(3).nk));
-                end
+        solutionTmp=inf;
+        while a*max(max(dist)) > highLatency && ~isempty(solutionTmp)
+            k=k+1;
+            solutionTmp=evaluateSingleInstanceHierarchical(dist,k);
+            if ~isempty(solutionTmp)
+                solution=solutionTmp;
+                solutionAll(k)=solution;
+                solutionAll(k).numberOfControllers= k*ones(size(solution.maxLatencyN2C));
+                [a,b]=min(solution.maxLatencyN2C);
+            else
+                continue;
             end
         end
-        currPlacement = tmp;
-        nk=solution.nk(b,:);
+        currPlacement = length([solutionAll(1:(k-1)).maxLatencyN2C])+b;
+        nk=solution.nk(b,:); 
         plotMegaEventResources(get(hCheckAssignment,'Value'),get(hCheckLatency,'Value'));
+    end
+
+%----------------------------------------------------------------------
+% Plots the Mega Event Resources before planning
+    function plotMegaEventResourcesBeforePlanning
+        x=newBSX;
+        y=newBSY;
+        assignmentIdx=unique(calculateBaseStationAssignment(coordinates,citynodes,x,y));        
+        set(hHierarchicalShowMegaEventResourcesMenuitem,'Enable','on');
+        set(hHierarchicalShowMegaEventResourcesMenuitem,'Checked','on');
+        plot(x,y,'.','Color','y','MarkerFaceColor','y','LineSmoothing','off','Parent',hPlotAxes1);
+        plot(coordinates(citynodes(assignmentIdx),1),coordinates(citynodes(assignmentIdx),2),'dk','MarkerFaceColor','y','LineSmoothing','off','Parent',hPlotAxes1)
     end
 
 %----------------------------------------------------------------------
@@ -1066,42 +1189,44 @@ neplusLight = '';
         if ~isempty(str2num(get(hEditLatency,'String')))
             highLatency=str2num(get(hEditLatency,'String'));
         else
-           set(hEditLatency,'String','300'); 
+            set(hEditLatency,'String','300');
         end
-    	x=newBSX;
-    	y=newBSY;
-    	set(hCheckMegaEventResources,'Enable','on');
-    	set(hCheckMegaEventResources,'Value',1);
-        set(hHierarchicalShowMegaEventResourcesMenuitem,'Enable','on');
-        set(hHierarchicalShowMegaEventResourcesMenuitem,'Checked','on');
-        sgwnodes=neplusnodesNOSGW(nk);
-        assignmentIdx=calculateBaseStationAssignment(coordinates,citynodes,x,y);
-        [mindiff assignmentIdxNESGW]=calculateBaseStationAssignmentTransport(distanceMatrix,citynodes,sgwnodes);
-        mycolors=repmat('y',length(sgwnodes),1);
-        mycolorsstatic=[0.6 0.6 0.6];
-         mycolorsstatic=repmat(mycolorsstatic,ceil(length(sgwnodesstatic)/size(mycolorsstatic,1)),1);
-        if assignment
-            mycolors=repmat(hsv(4),ceil(length(sgwnodes)/3),1);
-        end
-        for i=1:length(sgwnodes)
-            neplusAssignedToThisSGW=find(assignmentIdxNESGW==i);
-            if latency
-                diffNESGW=mindiff(find(assignmentIdxNESGW==i));                
+        if ~planned
+            plotMegaEventResourcesBeforePlanning;
+        else
+            x=newBSX;
+            y=newBSY;
+            set(hHierarchicalShowMegaEventResourcesMenuitem,'Enable','on');
+            set(hHierarchicalShowMegaEventResourcesMenuitem,'Checked','on');
+            sgwnodes=neplusnodesNOSGW(nk);
+            assignmentIdx=calculateBaseStationAssignment(coordinates,citynodes,x,y);
+            [mindiff assignmentIdxNESGW]=calculateBaseStationAssignmentTransport(distanceMatrix,citynodes,sgwnodes);
+            mycolors=repmat('y',length(sgwnodes),1);
+            mycolorsstatic=[0.6 0.6 0.6];
+            mycolorsstatic=repmat(mycolorsstatic,ceil(length(sgwnodesstatic)/size(mycolorsstatic,1)),1);
+            if assignment
+                mycolors=repmat(hsv(4),ceil(length(sgwnodes)/3),1);
             end
-            for j=1:length(neplusAssignedToThisSGW)
-                if ~isempty(find(assignmentIdx==neplusAssignedToThisSGW(j),1))
-                    if latency
-                        color=repmat('k',length(sgwnodes),1);
-                        color2=mycolorsstatic;
-                        if assignment
-                            color=mycolors;
-                            color2=mycolors;
+            for i=1:length(sgwnodes)
+                neplusAssignedToThisSGW=find(assignmentIdxNESGW==i);
+                if latency
+                    diffNESGW=mindiff(find(assignmentIdxNESGW==i));
+                end
+                for j=1:length(neplusAssignedToThisSGW)
+                    if ~isempty(find(assignmentIdx==neplusAssignedToThisSGW(j),1))
+                        if latency
+                            color=repmat('k',length(sgwnodes),1);
+                            color2=mycolorsstatic;
+                            if assignment
+                                color=mycolors;
+                                color2=mycolors;
+                            end
+                            plot(x(assignmentIdx==neplusAssignedToThisSGW(j)),y(assignmentIdx==neplusAssignedToThisSGW(j)),'.','Color',color2(i,:),'MarkerFaceColor',color2(i,:),'LineSmoothing','off','Parent',hPlotAxes1);
+                            plot(coordinates(citynodes(neplusAssignedToThisSGW(j)),1),coordinates(citynodes(neplusAssignedToThisSGW(j)),2),'d','Color',color(i,:),'MarkerFaceColor',getgreenyellowred(diffNESGW(j)/(highLatency)),'LineSmoothing','off','Parent',hPlotAxes1)
+                        else
+                            plot(x(assignmentIdx==neplusAssignedToThisSGW(j)),y(assignmentIdx==neplusAssignedToThisSGW(j)),'.','Color',mycolors(i,:),'MarkerFaceColor',mycolors(i,:),'LineSmoothing','off','Parent',hPlotAxes1);
+                            plot(coordinates(citynodes(neplusAssignedToThisSGW(j)),1),coordinates(citynodes(neplusAssignedToThisSGW(j)),2),'dk','MarkerFaceColor',mycolors(i,:),'LineSmoothing','off','Parent',hPlotAxes1)
                         end
-                        plot(x(assignmentIdx==neplusAssignedToThisSGW(j)),y(assignmentIdx==neplusAssignedToThisSGW(j)),'.','Color',color2(i,:),'MarkerFaceColor',color2(i,:));
-                        plot(coordinates(citynodes(neplusAssignedToThisSGW(j)),1),coordinates(citynodes(neplusAssignedToThisSGW(j)),2),'d','Color',color(i,:),'MarkerFaceColor',getgreenyellowred(diffNESGW(j)/(highLatency*5)))
-                    else
-                        plot(x(assignmentIdx==neplusAssignedToThisSGW(j)),y(assignmentIdx==neplusAssignedToThisSGW(j)),'.','Color',mycolors(i,:),'MarkerFaceColor',mycolors(i,:));
-                        plot(coordinates(citynodes(neplusAssignedToThisSGW(j)),1),coordinates(citynodes(neplusAssignedToThisSGW(j)),2),'dk','MarkerFaceColor',mycolors(i,:))
                     end
                 end
             end
@@ -1138,19 +1263,16 @@ neplusLight = '';
         axes(hPlotAxes1);
         box off;
         hold on;
-        [rlink,clink]=find(topology~=inf);
-        beginx=coordinates(rlink,1);
-        beginy=coordinates(rlink,2);
-        endx=coordinates(clink,1);
-        endy=coordinates(clink,2);
-        for m=1:length(beginx)
-            plot([beginx(m) endx(m)],[beginy(m) endy(m)],'Color',[0.6 0.6 0.6],'LineWidth',1, 'LineSmoothing','off');
-        end
+        if strcmp(get(hThemesClassicMenuitem,'Checked'),'on')
+            gplot(topology~=inf,coordinates,'k-');
+        else
+            gplot(topology~=inf,coordinates,'w-');
+        end        
         set(hCheckLinks,'Value',1);
         set(hHierarchicalShowLinksMenuitem,'Checked','on');
         set(gca,'Visible','off');
         xlim([-0.04e5 .7e5])
-        ylim([-0.03e5 1e5]) 
+        ylim([-0.03e5 1e5])
     end
 
 %----------------------------------------------------------------------
@@ -1160,15 +1282,19 @@ neplusLight = '';
         if ~isempty(str2num(get(hEditLatency,'String')))
             highLatency=str2num(get(hEditLatency,'String'));
         else
-           set(hEditLatency,'String','300'); 
+            set(hEditLatency,'String','300');
         end
         k=1;
         mycolorsstatic=[0.6 0.6 0.6];
         if assignment || latency
             k=length(sgwnodesstatic);
             [mindiff assignmentIdxNESGW]=calculateBaseStationAssignmentTransport(distanceMatrix,citynodes,sgwnodesstatic);
-            colorsNew=hsv(k);
-            mycolorsstatic(1:k,:)=colorsNew(1:k,:);
+            if assignment
+                colorsNew=hsv(k);
+                mycolorsstatic(1:k,:)=colorsNew(1:k,:);
+            else
+                mycolorsstatic(1:k,:)=repmat(mycolorsstatic,k,1);
+            end
         end
         for i=1:k
             neplusAssignedToThisSGW=[1:length(citynodes)];
@@ -1176,21 +1302,20 @@ neplusLight = '';
             if assignment || latency
                 neplusAssignedToThisSGW=find(assignmentIdxNESGW==i);
             end
-             if latency
-                 diffNESGW=mindiff(find(assignmentIdxNESGW==i));
-                 for j=1:length(neplusAssignedToThisSGW);
-                     color=getgreenyellowred(diffNESGW(j)/(highLatency*1e6));
-                     plot(coordinates(citynodes(neplusAssignedToThisSGW(j)),1),coordinates(citynodes(neplusAssignedToThisSGW(j)),2),'dk','MarkerSize',8,'MarkerFaceColor',getgreenyellowred(diffNESGW(j)/(highLatency*5)),'LineSmoothing','off');
-                 end
-             else
-                plot(coordinates(citynodes(neplusAssignedToThisSGW)',1),coordinates(citynodes(neplusAssignedToThisSGW)',2),'dk','MarkerSize',8,'MarkerFaceColor',color,'LineSmoothing','off')
-             end     
+            if latency
+                diffNESGW=mindiff(find(assignmentIdxNESGW==i));
+                for j=1:length(neplusAssignedToThisSGW);
+                    plot(coordinates(citynodes(neplusAssignedToThisSGW(j)),1),coordinates(citynodes(neplusAssignedToThisSGW(j)),2),'d','Color',color,'MarkerSize',8,'MarkerFaceColor',getgreenyellowred(diffNESGW(j)/(highLatency)),'LineSmoothing','off','Parent',hPlotAxes1);
+                end
+            else
+                plot(coordinates(citynodes(neplusAssignedToThisSGW)',1),coordinates(citynodes(neplusAssignedToThisSGW)',2),'d','Color',darken(color),'MarkerSize',8,'MarkerFaceColor',color,'LineSmoothing','off','Parent',hPlotAxes1)
+            end
         end
         set(hCheckAccessNodes,'Value',1);
         set(hHierarchicalShowAccessNodesMenuitem,'Checked','on');
         set(hEditLatency,'Enable','on');
     end
- 
+
 %----------------------------------------------------------------------
 % Plots the base stations of the hierarchical topology
 
@@ -1209,9 +1334,9 @@ neplusLight = '';
         for i=1:k
             if assignment
                 neplusAssignedToThisSGW=find(assignmentIdxNESGW==i);
-                plot(baseX(find(ismember(assignmentIdxStatic,neplusAssignedToThisSGW)))',baseY(find(ismember(assignmentIdxStatic,neplusAssignedToThisSGW)))','.','Color',mycolorsstatic(i,:),'MarkerSize',6,'LineSmoothing','off');
+                plot(baseX(find(ismember(assignmentIdxStatic,neplusAssignedToThisSGW)))',baseY(find(ismember(assignmentIdxStatic,neplusAssignedToThisSGW)))','.','Color',mycolorsstatic(i,:),'MarkerSize',6,'LineSmoothing','off','Parent',hPlotAxes1);
             else
-                plot(baseX',baseY','.','Color',mycolorsstatic,'MarkerFaceColor',mycolorsstatic,'MarkerSize',6,'LineWidth',1,'LineSmoothing','off');
+                plot(baseX',baseY','.','Color',mycolorsstatic,'MarkerFaceColor',mycolorsstatic,'MarkerSize',6,'LineWidth',1,'LineSmoothing','off','Parent',hPlotAxes1);
             end
         end
     end
@@ -1223,14 +1348,14 @@ neplusLight = '';
         set(hCheckSGWlocations,'Value',1);
         set(hHierarchicalShowSGWlocationsMenuitem,'Checked','on');
         mycolorsstatic=[0.6 0.6 0.6];
-        plot(coordinates(corenodes,1),coordinates(corenodes,2),'o','Color',darken(mycolorsstatic),'MarkerFaceColor','w','MarkerSize',14,'LineSmoothing','off');
+        plot(coordinates(corenodes,1),coordinates(corenodes,2),'o','Color',darken(mycolorsstatic),'MarkerFaceColor','w','MarkerSize',14,'LineSmoothing','off','Parent',hPlotAxes1);
     end
 
 %----------------------------------------------------------------------
 % Plots the SGWs of the hierarchical topology
 
     function plotSGWs(assignment,icons)
-    	set(hCheckSGWs,'Value',1);
+        set(hCheckSGWs,'Value',1);
         set(hHierarchicalShowSGWsMenuitem,'Checked','on');
         mycolorsstatic=[0.6 0.6 0.6];
         if icons
@@ -1243,17 +1368,17 @@ neplusLight = '';
             end
             for i=1:length(sgwnodesstatic)
                 image([(coordinates(sgwnodesstatic(i),1)-(imgW*10)/2 +500) (coordinates(sgwnodesstatic(i),1)+(imgW*10)/2 -500)],[coordinates(sgwnodesstatic(i),2)+(imgH*10)/2 coordinates(sgwnodesstatic(i),2)-(imgH*10)/2],img,'Parent',gca);
-            end  
+            end
             assignment=1;
         end
         if assignment
             colorsNew=hsv(length(sgwnodesstatic));
             mycolorsstatic(1:length(sgwnodesstatic),:)=colorsNew(1:length(sgwnodesstatic),:);
             for i=1:length(sgwnodesstatic)
-                plot(coordinates(sgwnodesstatic(i),1),coordinates(sgwnodesstatic(i),2),'ko','MarkerFaceColor',mycolorsstatic(i,:),'MarkerSize',12,'LineSmoothing','off')
-            end           
+                plot(coordinates(sgwnodesstatic(i),1),coordinates(sgwnodesstatic(i),2),'ko','MarkerFaceColor',mycolorsstatic(i,:),'MarkerSize',12,'LineSmoothing','off','Parent',hPlotAxes1)
+            end
         else
-            plot(coordinates(sgwnodesstatic,1),coordinates(sgwnodesstatic,2),'ko','MarkerFaceColor',mycolorsstatic,'MarkerSize',12,'LineSmoothing','off')
+            plot(coordinates(sgwnodesstatic,1),coordinates(sgwnodesstatic,2),'ko','MarkerFaceColor',mycolorsstatic,'MarkerSize',12,'LineSmoothing','off','Parent',hPlotAxes1)
         end
     end
 
@@ -1273,10 +1398,10 @@ neplusLight = '';
                 img=neplusLight;
             end
             for i=1:length(neplusnodesNOSGW)
-                image([(coordinates(neplusnodesNOSGW(i),1)-(imgW*10)/2 + 500) (coordinates(neplusnodesNOSGW(i),1)+(imgW*10)/2 - 500)],[coordinates(neplusnodesNOSGW(i),2)+(imgH*10)/2 coordinates(neplusnodesNOSGW(i),2)-(imgH*10)/2],img,'Parent',gca);            
+                image([(coordinates(neplusnodesNOSGW(i),1)-(imgW*10)/2 + 500) (coordinates(neplusnodesNOSGW(i),1)+(imgW*10)/2 - 500)],[coordinates(neplusnodesNOSGW(i),2)+(imgH*10)/2 coordinates(neplusnodesNOSGW(i),2)-(imgH*10)/2],img,'Parent',hPlotAxes1);
             end
         else
-            plot(coordinates(neplusnodesNOSGW,1),coordinates(neplusnodesNOSGW,2),'o','MarkerFaceColor','w','MarkerSize',11,'Color',darken(mycolorsstatic),'LineWidth',1,'LineSmoothing','off');        
+            plot(coordinates(neplusnodesNOSGW,1),coordinates(neplusnodesNOSGW,2),'o','MarkerFaceColor','w','MarkerSize',11,'Color',darken(mycolorsstatic),'LineWidth',1,'LineSmoothing','off','Parent',hPlotAxes1);
         end
     end
 
@@ -1284,26 +1409,27 @@ neplusLight = '';
 % Plots the Mega Event placements
 
     function plotMegaEvents
+        set(hHierarchicalView3,'Visible','on');
+        set(hHierarchicalView4,'Visible','on');
         set(hresetHierarchicalMenuitem,'Enable','on');
         set(hSaveMegaEventsMenuitem,'Enable','on');
-         hold on;
-        plot3(locX,locY,ones(size(locX)),'kp','MarkerFaceColor',[1 200/255 0],'MarkerSize',24,'LineWidth',1.5,'Color',darken([1 200/255 0]),'LineSmoothing','off','Parent',gca);
+        hold on;
+        plot3(locX,locY,ones(size(locX)),'kp','MarkerFaceColor',[1 200/255 0],'MarkerSize',24,'LineWidth',1.5,'Color',darken([1 200/255 0]),'LineSmoothing','off','Parent',hPlotAxes1);
         set(hCheckMegaEvents,'Enable','on');
         set(hHierarchicalShowMegaEventsMenuitem,'Enable','on');
         set(hHierarchicalShowMegaEventsMenuitem,'Checked','on');
         set(hCheckMegaEvents,'Value',1);
     end
-    
+
 
 %----------------------------------------------------------------------
 % Loads a topology
-     function OpenTopologyCallback(hObject, eventdata)
+    function OpenTopologyCallback(hObject, eventdata)
         [filename, pathname] = uigetfile({'*.topo.mat;*.graphml;*.xml','Graph topology (*.topo.mat, *.graphml, *.xml)';'*.topo.mat','POCO topology (*.topo.mat)';'*.graphml','GraphML / GephiGraphML topology (*.graphml)';'*.xml','SNDlib topology (*.xml)'},'Please select a valid topology file');
         file = fullfile(pathname, filename);
         if ~isequal(filename, 0)
             if isHierarchic
                 stopHierarchical;
-                
             end
             reset;
             if ~isempty(strfind(filename,'.topo.mat'))
@@ -1319,9 +1445,9 @@ neplusLight = '';
                 topology = [];
             end
         else
-           return 
+            return
         end
-        
+
         topologyName = filename(1:find(filename=='.')-1);
         if isempty(topology)
             errordlg('The selected file is not a valid topology.','File Error');
@@ -1332,7 +1458,7 @@ neplusLight = '';
             set(hCheckBoxTM,'Visible','on','Value',0);
         end
         set(hEditControllerFailureIDs,'Enable','on');
-        set(hEditNodeFailureIDs,'Enable','on');   
+        set(hEditNodeFailureIDs,'Enable','on');
         set(hNMenuitem.base,'Enable','on');
         set(hCMenuitem.base,'Enable','on');
         set(hCheckBoxMenuHeatmap,'Enable','on');
@@ -1346,14 +1472,14 @@ neplusLight = '';
         tm_org = tm;
         updateCheckBoxMenu;
         plotFigures;
-     end
- 
- %----------------------------------------------------------------------
- % Starts Planetlab
-     function InitPOCOPLC(hObject, eventdata)
-         reset;
-         [topology,coordinates,tm,nodenames]=loadNewPLCfile(plcFileCounter);
-         if ~isempty(topology)
+    end
+
+%----------------------------------------------------------------------
+% Starts Planetlab
+    function InitPOCOPLC(hObject, eventdata)
+        reset;
+        [topology,coordinates,tm,nodenames]=loadNewPLCfile(plcFileCounter);
+        if ~isempty(topology)
             set(hStartPlanetlabPlotLoopMenuitem,'Visible','on');
             set(hStopPlanetlabPlotLoopMenuitem,'Visible','on');
             set(hStartPlanetlabCalcLoopMenuitem,'Visible','on');
@@ -1364,7 +1490,7 @@ neplusLight = '';
             set(hLoadHistPLCMenuitem,'Visible','on');
             set(hSaveHistPLCMenuitem,'Visible','on');
             if strcmp(get(hThemesClassicMenuitem,'Checked'),'off')
-               changeTheme([1 1 1],[0 0 0]);
+                changeTheme([1 1 1],[0 0 0]);
             end
             set(hThemesMenu,'Enable','off');
             if ishandle(hFigurePLC)
@@ -1395,14 +1521,14 @@ neplusLight = '';
             tm_org = tm;
             updateCheckBoxMenu;
             plotFigures;
-         else
+        else
             errordlg('The selected file is not a valid topology.','File Error');
             return
         end
-     end
- 
- %----------------------------------------------------------------------
- % Stops Planetlab
+    end
+
+%----------------------------------------------------------------------
+% Stops Planetlab
     function StopPOCOPLC(hObject, eventdata)
         stop(plcPlotTimer);
         stop(plcCalcTimer);
@@ -1413,7 +1539,7 @@ neplusLight = '';
             delete(hFigurePLC);
         end
     end
- 
+
 %----------------------------------------------------------------------
 % Starts the plot loop for Planetlab
 
@@ -1425,7 +1551,7 @@ neplusLight = '';
         start(plcPlotTimer);
     end
 
-   function PLCPlotLoop(hObject, eventdata)
+    function PLCPlotLoop(hObject, eventdata)
         % Transfer current controllers by saving names
         controllerplacesOriginal=str2num(get(hEditControllerIDs,'String'));
         controllernamesOriginal=nodenames(controllerplacesOriginal);
@@ -1446,11 +1572,11 @@ neplusLight = '';
                 failedControllersPLC=[failedControllersPLC find(~cellfun(@isempty,strfind(nodenamesPLC,failedControllersOriginal{m})))];
             end
             failedNodesPLC=find(nansum(topology,1)==0);
-            
+
             drawnow
             plotAxesPLC;
         end
-   end
+    end
 
 %----------------------------------------------------------------------
 % Stops the plot loop for Planetlab
@@ -1508,7 +1634,7 @@ neplusLight = '';
 %----------------------------------------------------------------------
 % Fetches the data from the Planetlab live view and assignes it to POCO
     function fetchPLCdataCallback(hObject, eventdata)
-       fetchPLCdata; 
+        fetchPLCdata;
     end
 
     function fetchPLCdata
@@ -1530,16 +1656,16 @@ neplusLight = '';
 
 %----------------------------------------------------------------------
 % Saves the current topology as .topo.mat file
-     function SaveAsTopologyCallback(hObject, eventdata)
+    function SaveAsTopologyCallback(hObject, eventdata)
         [filename, pathname] = uiputfile({'*.topo.mat','POCO topology (*.topo.mat)'},'Save topology as...');
         file = fullfile(pathname, filename);
         if ~isequal(filename, 0)
-           saveTopology(file);
+            saveTopology(file);
         end
-     end
+    end
 
     function saveTopology(file)
-       save(file, '-mat','coordinates','nodenames','tm','topology'); 
+        save(file, '-mat','coordinates','nodenames','tm','topology');
     end
 
 %----------------------------------------------------------------------
@@ -1606,12 +1732,12 @@ neplusLight = '';
                     set(hEditControllerIDs,'String',num2str(nk(idx,:)));
                     plotFigures;
                 case 5
-                    if (strcmpi(optType,'N') || strcmpi(optType,'N2'))                    
+                    if (strcmpi(optType,'N') || strcmpi(optType,'N2'))
                         maxLatencyN2CAllFailures=solution.maxLatencyN2CAllNodeFailures;
                     else
                         maxLatencyN2CAllFailures=solution.maxLatencyN2CAllControllerFailures;
                     end
-                    val1=min(maxLatencyN2CAllFailures);                    
+                    val1=min(maxLatencyN2CAllFailures);
                     val2=min(solution.maxLatencyN2C(maxLatencyN2CAllFailures==val1));
                     idx=find(solution.maxLatencyN2C==val2 & maxLatencyN2CAllFailures==val1,1,'last');
                     currPlacement = idx;
@@ -1835,17 +1961,17 @@ neplusLight = '';
             valuex=char(mValues{1,2});
             valuey=char(mValues{2,2});
             set(hYAxisPopupMenu,'Value',2);
-            
+
             val1=min(solution.maxLatencyN2C);
             val2=min(solution.controllerImbalance(solution.maxLatencyN2C==val1));
             idx=find(solution.maxLatencyN2C==val1 & solution.controllerImbalance==val2,1,'last');
             currPlacement = idx;
             set(hResultPopupMenu,'Value',2);
             checkScenarioSelection;
-            set(hEditControllerIDs,'String',num2str(nk(idx,:)));   
+            set(hEditControllerIDs,'String',num2str(nk(idx,:)));
             set(hEditNodeFailureIDs,'String','');
             set(hEditControllerFailureIDs,'String','');
-            
+
             plotFigures;
             set(hMainFigure,'Pointer','arrow');
             set(hStatusLabel,'String',sprintf('Current placements: %s considering only failure free case with k=%d controllers - %d placements, calculated in %.2f seconds',tmstring,k,nksize,calcToc));
@@ -1862,12 +1988,12 @@ neplusLight = '';
             set(hStartPlanetlabPlotLoopMenuitem,'Enable','on');
             set(hStopPlanetlabPlotLoopMenuitem,'Enable','on');
             set(hStartPlanetlabCalcLoopMenuitem,'Enable','on');
-            set(hStopPlanetlabCalcLoopMenuitem,'Enable','on'); 
+            set(hStopPlanetlabCalcLoopMenuitem,'Enable','on');
         end
     end
 
 %----------------------------------------------------------------------
-% Calculates different controller placements for k controller considering 
+% Calculates different controller placements for k controller considering
 % up to two node failures
     function optimizeNodeFailure(hObject,eventdata,k)
         if ~isempty(topology)
@@ -1912,7 +2038,7 @@ neplusLight = '';
             set(hYAxisPopupMenu,'Value',7);
             valuex=char(mValues{1,2});
             valuey=char(mValues{7,2});
-            
+
             val1=min(solution.maxLatencyN2C);
             val2=min(solution.controllerImbalance(solution.maxLatencyN2C==val1));
             idx=find(solution.maxLatencyN2C==val1 & solution.controllerImbalance==val2,1,'last');
@@ -1920,8 +2046,8 @@ neplusLight = '';
             set(hResultPopupMenu,'Value',2);
             set(hScenarioPopupMenu,'Value',2);
             checkScenarioSelection;
-            set(hEditControllerIDs,'String',num2str(nk(idx,:)));   
-                     
+            set(hEditControllerIDs,'String',num2str(nk(idx,:)));
+
             plotFigures;
             set(hMainFigure,'Pointer','arrow');
             set(hStatusLabel,'String',sprintf('Current placements: %s considering up to two node failures with k=%d controllers - %d placements, calculated in %.2f seconds',tmstring,k,nksize,calcToc));
@@ -1965,7 +2091,7 @@ neplusLight = '';
             currPlacement = 1;
             set(hResultPopupMenu,'Visible','on','String',pValuesC);
             set(hResultLabel,'Visible','on');
-            if k < 3                
+            if k < 3
                 set(hScenarioPopupMenu,'Visible','on','String',rbValuesC(1,1:3));
             else
                 set(hScenarioPopupMenu,'Visible','on','String',rbValuesC);
@@ -1987,7 +2113,7 @@ neplusLight = '';
             set(hYAxisPopupMenu,'Value',4);
             valuex=char(mValues{1,2});
             valuey=char(mValues{4,2});
-            
+
             val1=min(solution.maxLatencyN2C);
             val2=min(solution.controllerImbalance(solution.maxLatencyN2C==val1));
             idx=find(solution.maxLatencyN2C==val1 & solution.controllerImbalance==val2,1,'last');
@@ -1995,8 +2121,8 @@ neplusLight = '';
             set(hResultPopupMenu,'Value',2);
             set(hScenarioPopupMenu,'Value',2);
             checkScenarioSelection;
-            set(hEditControllerIDs,'String',num2str(nk(idx,:)));   
-            
+            set(hEditControllerIDs,'String',num2str(nk(idx,:)));
+
             plotFigures;
             set(hMainFigure,'Pointer','arrow');
             set(hStatusLabel,'String',sprintf('Current placements: %s considering up to k-1 controller failures with k=%d controllers - %d placements, calculated in %.2f seconds',tmstring,k,nksize,calcToc));
@@ -2060,7 +2186,7 @@ neplusLight = '';
             set(hYAxisPopupMenu,'Value',4);
             valuex=char(mValues{1,2});
             valuey=char(mValues{4,2});
-            
+
             val1=min(solution.maxLatencyN2C);
             val2=min(solution.controllerImbalance(solution.maxLatencyN2C==val1));
             idx=find(solution.maxLatencyN2C==val1 & solution.controllerImbalance==val2,1,'last');
@@ -2068,8 +2194,8 @@ neplusLight = '';
             set(hResultPopupMenu,'Value',2);
             set(hScenarioPopupMenu,'Value',2);
             checkScenarioSelection;
-            set(hEditControllerIDs,'String',num2str(nk(idx,:)));   
-            
+            set(hEditControllerIDs,'String',num2str(nk(idx,:)));
+
             plotFigures;
             set(hMainFigure,'Pointer','arrow');
             set(hStatusLabel,'String',sprintf('Current placements: %s only placements being resilient against up to two node failures: k=%d controllers - %d placements, calculated in %.2f seconds',tmstring,active_k,nksize,calcToc));
@@ -2180,7 +2306,7 @@ neplusLight = '';
                     set(hStartPlanetlabPlotLoopMenuitem,'Enable','on');
                     set(hStopPlanetlabPlotLoopMenuitem,'Enable','on');
                     set(hStartPlanetlabCalcLoopMenuitem,'Enable','on');
-                    set(hStopPlanetlabCalcLoopMenuitem,'Enable','on');                      
+                    set(hStopPlanetlabCalcLoopMenuitem,'Enable','on');
                 end
             else
                 return;
@@ -2283,7 +2409,7 @@ neplusLight = '';
             nodenames=[];
         end
         if ~exist('distanceMatrix','var')
-           distanceMatrix=allToAllShortestPathMatrix(topology); 
+            distanceMatrix=allToAllShortestPathMatrix(topology);
         end
     end
 
@@ -2303,7 +2429,7 @@ neplusLight = '';
         plotdistcc=get(hCheckBoxDistCC,'Value');
         plotheatmap=get(hCheckBoxHeatmap,'Value');
         plottm=get(hCheckBoxTM,'Value');
-        
+
         if isempty(regexp(get(hEditControllerIDs,'String'),'[^0-9 \:]'))
             controllerplaces=str2num(get(hEditControllerIDs,'String'));
             if ~isempty(find(controllerplaces>length(topology)))
@@ -2347,7 +2473,7 @@ neplusLight = '';
         showControllerlessHeatmap = 'off';
         showControllerImbalance = 'off';
         showNodeWeights = 'off';
-        
+
         if plotids
             showIds = 'on';
         end
@@ -2371,12 +2497,12 @@ neplusLight = '';
         if plottm && ~isempty(tm)
             showNodeWeights = 'on';
         end
-        
+
         if isempty(tm)
             tm=ones(1,size(topology,1));
         end
         position = get(hMainFigure,'Position');
-        
+
         if isempty(tmPLC)
             tmPLC=ones(1,size(topologyPLC,1));
         end
@@ -2385,7 +2511,7 @@ neplusLight = '';
             if (plotdistnc+plotdistcc+plotbal)>0 && isempty(controllerplaces)
             end
             weights = log(1+tm(tmindex,:)/max(tm(tmindex,:))*10)';
-            if exist('colorscheme','var')                
+            if exist('colorscheme','var')
                 distanceMatrixTmp(distanceMatrix==inf)=nan;
                 referenceDiameter=nanmax(nanmax(distanceMatrixTmp));
                 plotTopology(topology,coordinates,controllerplaces,'FailedControllers',controllersfailed,'FailedNodes',nodesfailed,'Parent',hPlotAxes1,'nodeWeights',weights,'ReferenceDiameter',referenceDiameter,'Colors',colorscheme,'ShowIds',showIds,'ShowNodeToControllerLatency',showNodeToControllerLatency,'ShowControllerToControllerLatency',showControllerToControllerLatency,'ShowControllerlessHeatmap',showControllerlessHeatmap,'ShowControllerImbalance',showControllerImbalance,'ShowNodeWeights',showNodeWeights,'Markers', 'o','Position',position);
@@ -2404,7 +2530,7 @@ neplusLight = '';
 
 %----------------------------------------------------------------------
 % Plots the Planetlab live view statistics
-   function plotted=plotAxesPLC
+    function plotted=plotAxesPLC
         plotted=0;
         plotids=get(hCheckBoxIDs,'Value');
         plotdistnc=get(hCheckBoxDistNC,'Value');
@@ -2412,20 +2538,20 @@ neplusLight = '';
         plotdistcc=get(hCheckBoxDistCC,'Value');
         plotheatmap=get(hCheckBoxHeatmap,'Value');
         plottm=get(hCheckBoxTM,'Value');
-        
+
         controllerplaces=controllerplacesPLC;
-        
+
         controllersfailed=failedControllersPLC;
-        
+
         nodesfailed=failedNodesPLC;
-        
+
         showIds = 'off';
         showNodeToControllerLatency = 'off';
         showControllerToControllerLatency = 'off';
         showControllerlessHeatmap = 'off';
         showControllerImbalance = 'off';
         showNodeWeights = 'off';
-        
+
         if plotids
             showIds = 'on';
         end
@@ -2448,12 +2574,12 @@ neplusLight = '';
 
         if plottm && ~isempty(tm)
             showNodeWeights = 'on';
-        end        
+        end
 
         if isempty(tmPLC)
             tmPLC=ones(1,size(topologyPLC,1));
         end
-        
+
         if ~isempty(topologyPLC)
             [tmvals,latencyvals,mycolors,meanlatencyvals,assignmentsNew]=plotTopologyPLC(topologyPLC,coordinatesPLC,controllerplaces,'FailedControllers',controllersfailed,'FailedNodes',nodesfailed,'Parent',hFigurePLC,'CurrentAxis',hPlotAxesPLC,'nodeWeights',tmPLC(tmindex,:),'ReferenceDiameter',1,'ShowMap','on','ShowIds',showIds,'ShowNodeToControllerLatency',showNodeToControllerLatency,'ShowControllerToControllerLatency',showControllerToControllerLatency,'ShowControllerlessHeatmap',showControllerlessHeatmap,'ShowControllerImbalance',showControllerImbalance,'ShowNodeWeights',showNodeWeights,'Markers', 'o');
             set(hPlotAxesPLC,'Position',[0.03 0.57 0.94 0.43])
@@ -2501,7 +2627,7 @@ neplusLight = '';
             set(0,'CurrentFigure',hMainFigure)
             plotted=1;
         end
-   end
+    end
 
 
 %----------------------------------------------------------------------
@@ -2547,7 +2673,7 @@ neplusLight = '';
 
 
 %----------------------------------------------------------------------
-% Calls the plotFiguresToggle function 
+% Calls the plotFiguresToggle function
     function plotFigures
         plotFiguresToggle(1);
     end
@@ -2694,7 +2820,7 @@ neplusLight = '';
 
 %----------------------------------------------------------------------
 % Saves the topology plot as an image file
-    function exportPlotCallback(hObject,eventdata,tag) 
+    function exportPlotCallback(hObject,eventdata,tag)
         pnew=figure('MenuBar','none','Toolbar','none','Resize','on','NumberTitle','off');
         hnew=copyobj(hPlotAxes1,pnew);
         set(hnew,'Units', 'normalized','Position',[0.05 0.05 0.9 0.9]);
@@ -2836,18 +2962,18 @@ neplusLight = '';
     function savePlotSettings
         if isempty(last20plots)
             last20plots=struct;
-            i=1;
+            iz=1;
         else
-            i=last20plotsidx+1;
+            iz=last20plotsidx+1;
             % New plot overrides old redo options
-            last20plots=last20plots(1:i-1);
+            last20plots=last20plots(1:iz-1);
         end
         set(hRedoMenuitem,'Enable','off');
-        if i>1
+        if iz>1
             set(hUndoMenuitem,'Enable','on');
         end
 
-        last20plots(i).stp=storePlot;
+        last20plots(iz).stp=storePlot;
 
         if length(last20plots)>20
             last20plots=last20plots(end-20:end);
@@ -2880,8 +3006,8 @@ neplusLight = '';
 % Loads the stored plot settings
     function restorePlotSettings
         if ~isempty(last20plots)
-            i=last20plotsidx;
-            loadPlot(last20plots(i).stp);
+            iz=last20plotsidx;
+            loadPlot(last20plots(iz).stp);
         end
     end
 
@@ -2975,15 +3101,15 @@ neplusLight = '';
         currPlacement = 0;
         textXaxis = '';
         textYaxis = '';
-        
+
         % Variables to save the PLC history
         tmvals=[];
         latencyvals=[];
         myidx='';
         mycolors=[];
         meanlatencyvals=[];
-        bestmaxidx='';  
-        
+        bestmaxidx='';
+
         set(hPlacementsMenu,'Enable','off');
         set(hPlotAxes1,'Visible','off');
         set(hPlotAxes2,'Visible','off');
@@ -3014,7 +3140,7 @@ neplusLight = '';
         set(hLatenciesMenu,'Visible','on');
         set(hEdgeOptionsMenu,'Visible','on');
         set(hNodeWeightsMenu,'Visible','on');
-        
+
         set(hStartPlanetlabPlotLoopMenuitem,'Enable','off');
         set(hStopPlanetlabPlotLoopMenuitem,'Enable','off');
         set(hStartPlanetlabCalcLoopMenuitem,'Enable','off');
@@ -3029,7 +3155,7 @@ neplusLight = '';
         set(hSaveHistPLCMenuitem,'Visible','off');
         set(hLoadHistPLCMenuitem,'Visible','off');
         set(hSaveHistPLCMenuitem,'Enable','off');
-        
+
         set(hCheckBoxIDs,'Value',1,'Visible','on');
         set(hLabelPlotOptions,'Visible','on');
         set(hCheckBoxTM,'Visible','off','Value',0);
@@ -3048,9 +3174,22 @@ neplusLight = '';
         set(hEditControllerIDs,'String','');
         set(hEditControllerFailureIDs,'String','');
         set(hEditNodeFailureIDs,'String','');
-        
+
         set(hPlotOptionsMenu,'Enable','off');
         set(hPredefinedViewsMenu,'Enable','off');
+
+        set(hViewMaxLatencyMenuitem,'Visible','on');
+        set(hViewImbalanceMenuitem,'Visible','on');
+        set(hViewMaxLatencyCCMenuitem,'Visible','on');
+        set(hViewControllerlessMenuitem,'Visible','on');
+        set(hHierarchicalView1,'Visible','off');
+        set(hHierarchicalView2,'Visible','off');
+        set(hHierarchicalView3,'Visible','off');
+        set(hHierarchicalView4,'Visible','off');
+        set(hHierarchicalViewLatStat,'Visible','off');
+        set(hHierarchicalViewBalStat,'Visible','off');
+        set(hHierarchicalViewLatDyn,'Visible','off');
+        set(hHierarchicalViewBalDyn,'Visible','off');
         % Controls should be always visible
 
         set(hEditControllerIDs,'Visible','on');
@@ -3138,22 +3277,15 @@ neplusLight = '';
                     start(plotTimer);
                 else
                     indx =find([solutionAll.(valuex)]==pos(1) & [solutionAll.(valuey)]==pos(2));
-                    tmp=0;
-                    if indx(1) > max(size(solutionAll(1).(valuex)))
-                        indyTmp=indx(1)-max(size(solutionAll(1).(valuex)));
-                        if indyTmp > max(size(solutionAll(2).(valuex)))
-                            indyTmp=indyTmp-max(size(solutionAll(2).(valuex)));
-                            if indyTmp > max(size(solutionAll(3).(valuex)))
-                                indyTmp=indyTmp-max(size(solutionAll(3).(valuex)));
-                                tmp=solutionAll(4).nk(indyTmp,:);
-                            else
-                                tmp=solutionAll(3).nk(indyTmp,:);
-                            end
+                    indyTmp0=indx(1);
+                    indyTmp=indx(1);
+                    for i=1:length(solutionAll)
+                        if indyTmp > length([solutionAll(1:i).(valuex)])
+                            indyTmp=indyTmp0-length([solutionAll(1:i).(valuex)]);
                         else
-                            tmp=solutionAll(2).nk(indyTmp,:);
+                            tmp=solutionAll(i).nk(indyTmp,:);
+                            break;
                         end
-                    else 
-                        tmp=solutionAll(1).nk(indx(1),:);
                     end
                     idxhit = tmp;
                     currPlacement = find([solutionAll.(valuey)]==pos(2) & [solutionAll.(valuex)]==pos(1),1);
@@ -3178,12 +3310,12 @@ neplusLight = '';
 
 %----------------------------------------------------------------------
 % Opens a online help
-    function openOnlineHelpCallback(hObject, eventdata)
-        web('http://www3.informatik.uni-wuerzburg.de/research/projects/saser/poco/','-browser');
-    end
-
-    function openOnlineHelp
-        web('http://www3.informatik.uni-wuerzburg.de/research/projects/saser/poco/','-browser');
+    function openOnlineHelp(hObject,eventdata)
+        if matlabVersion < 2013
+            web 'http://www3.informatik.uni-wuerzburg.de/research/projects/saser/poco/';
+        else
+            web('http://www3.informatik.uni-wuerzburg.de/research/projects/saser/poco/','-browser');
+        end
     end
 %----------------------------------------------------------------------
 % Opens a figure containing information about POCO
@@ -3197,7 +3329,7 @@ neplusLight = '';
         set( hcontainer, 'units', 'pixel', 'Position', [0 0 500 600] );
         hCloseButton = uicontrol('Parent',hAboutFig,'Units','pixel','Position',[200 25 100 30],'HandleVisibility','on','Visible','on','String','Ok','Style','pushbutton','HorizontalAlignment','right','Callback',{@closeFig,hAboutFig});
     end
-    
+
 
 %----------------------------------------------------------------------
 % Closes the GUI after asking for permission
@@ -3240,7 +3372,7 @@ neplusLight = '';
             'Style','edit','BackgroundColor','w','HandleVisibility','on','Visible','on');
         hButtonSave = uicontrol('Parent',inputFig,'Units','pixel','Position',[40 10 100 30],'HandleVisibility','on','Visible','on','String','Create edge','Style','pushbutton','HorizontalAlignment','right','Callback',@createEdge);
         hButtonCancel = uicontrol('Parent',inputFig,'Units','pixel','Position',[160 10 100 30],'HandleVisibility','on','Visible','on','String','Cancel','Style','pushbutton','HorizontalAlignment','right','Callback',{@closeFig,inputFig});
-    
+
         function createEdge(hObject, eventdata)
             if (~isempty(str2num(get(hEditSourceID,'String'))) && ~isempty(str2num(get(hEditDestID,'String'))))
                 if (length(str2num(get(hEditSourceID,'String')))== 1 && length(str2num(get(hEditDestID,'String'))) == 1)
@@ -3262,10 +3394,10 @@ neplusLight = '';
                         errordlg('At least one of the selected nodes does not exist.','Error! Node does not exist');
                     end
                 else
-                   errordlg('Too many IDs! An edge has only one source and one destination.','Error! Too many nodes'); 
+                    errordlg('Too many IDs! An edge has only one source and one destination.','Error! Too many nodes');
                 end
             end
-        end 
+        end
     end
 
 
@@ -3285,7 +3417,7 @@ neplusLight = '';
             'Style','edit','BackgroundColor','w','HandleVisibility','on','Visible','on');
         hButtonSave = uicontrol('Parent',inputFig,'Units','pixel','Position',[40 10 100 30],'HandleVisibility','on','Visible','on','String','Delete edge','Style','pushbutton','HorizontalAlignment','right','Callback',@deleteEdge);
         hButtonCancel = uicontrol('Parent',inputFig,'Units','pixel','Position',[160 10 100 30],'HandleVisibility','on','Visible','on','String','Cancel','Style','pushbutton','HorizontalAlignment','right','Callback',{@closeFig,inputFig});
-    
+
         function deleteEdge(hObject, eventdata)
             if (~isempty(str2num(get(hEditSourceID,'String'))) && ~isempty(str2num(get(hEditDestID,'String'))))
                 if (length(str2num(get(hEditSourceID,'String')))== 1 && length(str2num(get(hEditDestID,'String'))) == 1)
@@ -3306,27 +3438,27 @@ neplusLight = '';
                         errordlg('The selected edge does not exist.','Error! Edge does not exist');
                     end
                 else
-                   errordlg('Too many IDs! An edge has only one source and one destination.','Error! Too many nodes'); 
+                    errordlg('Too many IDs! An edge has only one source and one destination.','Error! Too many nodes');
                 end
             end
-        end      
+        end
     end
 
 
 %----------------------------------------------------------------------
 % Resets the edges of the original topology
     function resetEdges(hObject, eventdata)
-       topology = topology_org;
-       distanceMatrix=distanceMatrix_org;
-       updateCheckBoxMenu;
-       plotFigures;
+        topology = topology_org;
+        distanceMatrix=distanceMatrix_org;
+        updateCheckBoxMenu;
+        plotFigures;
     end
 
 
 %----------------------------------------------------------------------
 % Closes a figure
     function closeFig(hObject, eventdata, fig)
-       close(fig); 
+        close(fig);
     end
 
 
@@ -3339,7 +3471,7 @@ neplusLight = '';
         verticalPos = 550;
         if (rows*50 +50) > 600
             hcontainer=uipanel('parent',inputFig,'units','pixels','position',[0 0 800 (rows*50 - 550)],'Bordertype','none','BackgroundColor','w');
-            uicontrol('style','slider','parent',inputFig,'position',[781 1 20 600],'Min',0,'max',(rows*50 - 550),'value',(rows*50-550),'callback',{@slider_Callback,rows}); 
+            uicontrol('style','slider','parent',inputFig,'position',[781 1 20 600],'Min',0,'max',(rows*50 - 550),'value',(rows*50-550),'callback',{@slider_Callback,rows});
             parent=hcontainer;
         end
         node=1;
@@ -3351,7 +3483,7 @@ neplusLight = '';
                     hLabelNodeTM = uicontrol('Parent',parent,'Units','pixel','HorizontalAlignment','left','Position',[horizontalPos verticalPos 80 30],...
                         'String',strcat('Node ID',num2str(node)),'Style','text','BackgroundColor',get(hMainFigure,'Color'),'Visible','on','FontWeight','bold');
                     hEditNodeTM = uicontrol('Parent',parent,'Units','pixel','HorizontalAlignment','left','Position',[(horizontalPos + 85) (verticalPos + 12) 80 20],...
-                        'Style','edit','BackgroundColor','w','HandleVisibility','on','Visible','on','String',tm(node));   
+                        'Style','edit','BackgroundColor','w','HandleVisibility','on','Visible','on','String',tm(node));
                     horizontalPos = horizontalPos + 200;
                     node = node + 1;
                     nodeTMs = [nodeTMs hEditNodeTM];
@@ -3361,12 +3493,12 @@ neplusLight = '';
         end
         hButtonSave = uicontrol('Parent',parent,'Units','pixel','Position',[290 (verticalPos+10) 100 30],'HandleVisibility','on','Visible','on','String','Save node weights','Style','pushbutton','HorizontalAlignment','right','Callback',@editNodeWeights);
         hButtonCancel = uicontrol('Parent',parent,'Units','pixel','Position',[410 (verticalPos+10) 100 30],'HandleVisibility','on','Visible','on','String','Cancel','Style','pushbutton','HorizontalAlignment','right','Callback',{@closeFig,inputFig});
-       
-        
+
+
         function slider_Callback(hObject,eventdata, rows)
             set(hcontainer,'Position',[0 (rows*50-550)-get(hObject,'Value') 800 (rows*50-550)])
         end
-        
+
         function editNodeWeights(hObject, eventdata)
             if (size(tm)==size(nodeTMs))
                 for node = 1:length(tm)
@@ -3387,9 +3519,9 @@ neplusLight = '';
 %----------------------------------------------------------------------
 % Resets the node weights of the original topology
     function resetNodeWeights(hObject, eventdata)
-       tm=tm_org;
-       updateCheckBoxMenu;
-       plotFigures;
+        tm=tm_org;
+        updateCheckBoxMenu;
+        plotFigures;
     end
 
 
@@ -3414,7 +3546,7 @@ neplusLight = '';
                 end
             else
                 errordlg('The selected file does not fit the current topology.','Error! Wrong number of node weights');
-            end  
+            end
         end
     end
 
@@ -3427,17 +3559,17 @@ neplusLight = '';
         if ~isempty(nodenames)
             fprintf(fidNodes,'Label;Latitude;Longitude;Weights\n');
         else
-             fprintf(fidNodes,'Latitude;Longitude;Weights;\n');           
+            fprintf(fidNodes,'Latitude;Longitude;Weights;\n');
         end
         for j=1:length(coordinates)
             if ~isempty(nodenames) && length(nodenames) == length(coordinates)
                 fprintf(fidNodes,'%s;%f;%f;%f;\n',nodenames{j},coordinates(j,1),coordinates(j,2),tm(j));
             else
                 fprintf(fidNodes,'%f;%f;%f;\n',coordinates(j,1),coordinates(j,2),tm(j));
-            end            
+            end
         end
-        fclose(fidNodes);  
-        
+        fclose(fidNodes);
+
         fileNameEdges = strcat(topologyName,'_edges.gephi.csv');
         fidEdges = fopen (fileNameEdges,'w');
         fprintf(fidEdges,'Source;Target;Weight;\n');
@@ -3445,7 +3577,7 @@ neplusLight = '';
         for j=1:length(rows)
             if cols(j)<rows(j)
                 fprintf(fidEdges,'%d;%d;%f;\n',rows(j),cols(j),topology(rows(j),cols(j)));
-            end            
+            end
         end
         fclose(fidEdges);
     end
@@ -3472,7 +3604,7 @@ neplusLight = '';
         [filename, pathname] = uiputfile({'*.hist.mat','Planetlab history (*.hist.mat)'},'Save Planetlab history as...');
         file = fullfile(pathname, filename);
         if ~isequal(filename, 0)
-           savePLCHistory(file);
+            savePLCHistory(file);
         end
     end
 
@@ -3490,12 +3622,12 @@ neplusLight = '';
         [filename, pathname] = uigetfile({'*.hist.mat','Planetlab history (*.hist.mat)'},'Please select a valid Planetlab history file');
         file = fullfile(pathname, filename);
         if ~isequal(filename, 0)
-%            reset;
+            %            reset;
             if ~isempty(strfind(filename,'.hist.mat'))
                 [topologyPLC,tmPLC,coordinatesPLC,solution,valuex,valuey,mValues,optType,nk,timeArray,tmvals,nodenamesPLC,controllerplacesPLC,latencyvals,changes,imbalance,mycolors,meanlatencyvals,avgLatencyArray,avgTMArray,changesPLC,sumbalancearrayPLC,plcCounter,myidx,currPlacement,newPLCCalc,bestmaxidx,currentmaxidxHist,maxarrayPLC,maxmaxarrayPLC]=loadHistFile(file);
             end
         else
-           return 
+            return
         end
         if isempty(topologyPLC)
             errordlg('The selected file is not a valid topology.','File Error');
@@ -3517,7 +3649,7 @@ neplusLight = '';
         plotAxes2;
         updateCheckBoxMenu;
     end
- 
+
     function [topologyPLC,tmPLC,coordinatesPLC,solution,valuex,valuey,mValues,optType,nk,timeArray,tmvals,nodenamesPLC,controllerplacesPLC,latencyvals,changes,imbalance,mycolors,meanlatencyvals,avgLatencyArray,avgTMArray,changesPLC,sumbalancearrayPLC,plcCounter,myidx,currPlacement,newPLCCalc,bestmaxidx,currentmaxidxHist,maxarrayPLC,maxmaxarrayPLC]=loadHistFile(filename)
         if exist(filename,'file')
             load(filename);
@@ -3533,10 +3665,10 @@ neplusLight = '';
 % Changes the theme of the GUI
     function changeThemeCallback(hObject, eventdata, backgroundColor, foregroundColor)
         if strcmp(get(hObject,'Checked'),'off')
-            changeTheme(backgroundColor, foregroundColor); 
+            changeTheme(backgroundColor, foregroundColor);
         end
-    end    
-    
+    end
+
     function changeTheme(backgroundColor, foregroundColor)
         if strcmp(get(hThemesClassicMenuitem,'Checked'),'off')
             checkedClassic = 'on';
@@ -3545,7 +3677,7 @@ neplusLight = '';
             set(hThemesDarkMenuitem, 'Accelerator','K');
             set(hPlotAxes2,'Color','w');
             set(get(hPlotAxes2,'XLabel'),'Color','k');
-            set(hPlotAxes2,'XColor','k','YColor','k'); 
+            set(hPlotAxes2,'XColor','k','YColor','k');
             set(hEditControllerIDs,'ForegroundColor',foregroundColor,'BackgroundColor',backgroundColor);
             set(hEditControllerFailureIDs,'ForegroundColor',foregroundColor,'BackgroundColor',backgroundColor);
             set(hEditNodeFailureIDs,'ForegroundColor',foregroundColor,'BackgroundColor',backgroundColor);
@@ -3553,9 +3685,6 @@ neplusLight = '';
             set(hScenarioPopupMenu,'ForegroundColor',foregroundColor,'BackgroundColor',backgroundColor');
             set(hXAxisPopupMenu,'ForegroundColor',foregroundColor,'BackgroundColor',backgroundColor);
             set(hYAxisPopupMenu,'ForegroundColor',foregroundColor,'BackgroundColor',backgroundColor);
-%             if isHierarchic
-%                 plotGermany([0.8784 0.9216 0.9686]);
-%             end
         else
             checkedClassic = 'off';
             checkedDark = 'on';
@@ -3570,36 +3699,33 @@ neplusLight = '';
             set(hScenarioPopupMenu,'ForegroundColor','w','BackgroundColor',[0.4 0.4 0.4]);
             set(hXAxisPopupMenu,'ForegroundColor','w','BackgroundColor',[0.4 0.4 0.4]);
             set(hYAxisPopupMenu,'ForegroundColor','w','BackgroundColor',[0.4 0.4 0.4]);
-%             if isHierarchic
-%                 plotGermany([0.8 0.8 0.8]);
-%             end
         end
         set(hThemesClassicMenuitem,'Checked',checkedClassic);
         set(hThemesDarkMenuitem,'Checked',checkedDark);
-        set(hMainFigure,'Color',backgroundColor); 
+        set(hMainFigure,'Color',backgroundColor);
         set(hPanelAxes2,'BackgroundColor',get(hMainFigure,'Color'));
         set(hPlotAxes2,'Color',get(hMainFigure,'Color'));
-        set(hCheckBoxBalance,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor); 
-        set(hCheckBoxDistCC,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor); 
-        set(hCheckBoxDistNC,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor); 
-        set(hCheckBoxHeatmap,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor); 
-        set(hCheckBoxIDs,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor); 
-        set(hCheckBoxTM,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);    
-        set(hLabelControllerIDs,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);    
-        set(hLabelControllerFailureIDs,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);    
-        set(hLabelNodeFailureIDs,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);    
-        set(hResultLabel,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);    
-        set(hScenarioLabel,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);    
-        set(hXAxisLabel,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);    
-        set(hYAxisLabel,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);    
+        set(hCheckBoxBalance,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hCheckBoxDistCC,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hCheckBoxDistNC,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hCheckBoxHeatmap,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hCheckBoxIDs,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hCheckBoxTM,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hLabelControllerIDs,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hLabelControllerFailureIDs,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hLabelNodeFailureIDs,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hResultLabel,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hScenarioLabel,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hXAxisLabel,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hYAxisLabel,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
         set(hLabelPlotOptions,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
-        set(hCheckLinks,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor); 
-        set(hCheckBaseStations,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor); 
-        set(hCheckAccessNodes,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor); 
-        set(hCheckMegaEvents,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor); 
-        set(hCheckAssignment,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);    
-        set(hCheckSGWs,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);    
-        set(hCheckNeplus,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);    
+        set(hCheckLinks,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hCheckBaseStations,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hCheckAccessNodes,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hCheckMegaEvents,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hCheckAssignment,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hCheckSGWs,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
+        set(hCheckNeplus,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
         set(hCheckIcons,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
         set(hLabelLatency,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
         set(hCheckLatency,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
@@ -3610,7 +3736,10 @@ neplusLight = '';
         set(hBusyLabel,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
         set(hLayerLabel,'BackgroundColor',get(hMainFigure,'Color'),'ForegroundColor',foregroundColor);
         fixAxes2PlotTextColor;
-        
+        if isHierarchic
+            updatePlotAxes1;
+        end
+
     end
 
 
@@ -3623,7 +3752,7 @@ neplusLight = '';
 
     function compactView
         set(hCompactViewMenuitem,'Checked','on');
-        set(hFullViewMenuitem,'Checked','off');        
+        set(hFullViewMenuitem,'Checked','off');
         set(hCompactViewMenuitem, 'Accelerator','');
         set(hFullViewMenuitem, 'Accelerator','T');
         set(hPanelAxes2,'Visible','off');
@@ -3631,9 +3760,9 @@ neplusLight = '';
         set(hYAxisLabel,'Visible','off');
         set(hYAxisPopupMenu,'Visible','off');
         set(hXAxisLabel,'Visible','off');
-        set(hXAxisPopupMenu,'Visible','off');      
+        set(hXAxisPopupMenu,'Visible','off');
         set(hYAxisPopupMenuHierarchical,'Visible','off');
-        set(hXAxisPopupMenuHierarchical,'Visible','off');   
+        set(hXAxisPopupMenuHierarchical,'Visible','off');
     end
 
 
@@ -3647,38 +3776,11 @@ neplusLight = '';
 
     function fullView
         set(hCompactViewMenuitem,'Checked','off');
-        set(hFullViewMenuitem,'Checked','on');     
+        set(hFullViewMenuitem,'Checked','on');
         set(hCompactViewMenuitem, 'Accelerator','T');
         set(hFullViewMenuitem, 'Accelerator','');
         set(hPanelAxes2,'Visible','on');
         set(hPanelAxes1,'Position',fullViewSize);
-%         set(hPanelAxesBaseStations,'Position',fullViewSize);
-%         set(hPanelAxesBaseStationsAssignment,'Position',fullViewSize);
-%         set(hPanelAxesSGWs,'Position',fullViewSize);
-%         set(hPanelAxesNeplus,'Position',fullViewSize);
-%         set(hPanelAxesMegaEvents,'Position',fullViewSize);
-%         set(hPanelAxesCalculatedSGWs,'Position',fullViewSize);
-%         set(hPanelAxesBorder,'Position',fullViewSize);
-%         set(hPanelAxesAccessNodes,'Position',fullViewSize);
-%         set(hPanelAxesSGWsIcons,'Position',fullViewSize);
-%         set(hPanelAxesSGWsIconsLight,'Position',fullViewSize);
-%         set(hPanelAxesSGWsNormal,'Position',fullViewSize);
-%         set(hPanelAxesNeplusIcons,'Position',fullViewSize);
-%         set(hPanelAxesNeplusIconsLight,'Position',fullViewSize);
-%         set(hPanelAxesNeplusNormal,'Position',fullViewSize);
-%         set(hPanelAxesMegaEventResources,'Position',fullViewSize);
-%         set(hPanelAxesMegaEventResourcesNormal,'Position',fullViewSize);
-%         set(hPanelAxesMegaEventResourcesAssignment,'Position',fullViewSize);
-%         set(hPanelAxesCalculatedSGWs,'Position',fullViewSize);
-%         set(hPanelAxesCalculatedSGWsIcons,'Position',fullViewSize);
-%         set(hPanelAxesCalculatedSGWsNormal,'Position',fullViewSize);
-%         set(hPanelAxesCalculatedSGWsLatency,'Position',fullViewSize);
-%         set(hPanelAxesCalculatedSGWsLatencyAssignment,'Position',fullViewSize);
-%         set(hPanelAxesAccessNodesLatencyAssignment,'Position',fullViewSize);
-%         set(hPanelAxesAccessNodesLatency,'Position',fullViewSize);
-%         set(hPanelAxesAccessNodesAssignment,'Position',fullViewSize);
-%         set(hPanelAxesSGWsAssignment,'Position',fullViewSize);
-%         set(hPanelAxesCoreNodes,'Position',fullViewSize);
         if ~isempty(get(hYAxisPopupMenu,'String'))
             set(hYAxisLabel,'Visible','on');
             set(hYAxisPopupMenu,'Visible','on');
@@ -3698,7 +3800,7 @@ neplusLight = '';
 % Switches the color of the pareto-plot text according to the selected
 % theme
     function fixAxes2PlotTextColor
-       if ~plcTopo
+        if ~plcTopo
             if ~isempty(textXaxis) && ~isempty(textYaxis)
                 if strcmp(get(hThemesClassicMenuitem,'Checked'),'off')
                     set(textXaxis,'Color','w');
@@ -3710,6 +3812,6 @@ neplusLight = '';
                     set(hPlotAxes2,'Color',get(hMainFigure,'Color'));
                 end
             end
-        end 
+        end
     end
 end
