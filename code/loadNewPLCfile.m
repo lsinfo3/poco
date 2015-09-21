@@ -2,15 +2,15 @@ function [topology,latlong,tm,nodenames]=loadNewPLCfile(fileid)
 % Check Matlab-version
 matlabVersion=str2num(regexprep(version('-release'),'[^0-9]','')) ;
 
-globalTopology=load('selectedNodesAdv.mat');
+globalTopology=load('planetlab/selectedNodesAdv.mat');
 % Load RTT to create variable topology
 if nargin<1
-    fidRTT=fopen('currentPLC.csv');
+    fidRTT=fopen('planetlab/currentPLC.csv');
 else 
     fidRTT=fopen(['localbackup/rttglobal_' num2str(fileid)  '.csv']);
 end
 if fidRTT>0
-    dataRTT=textscan(fidRTT,'%[^;];%[^;];%f\n','TreatAsEmpty','None');
+    dataRTT=textscan(fidRTT,'%[^;];%[^;];%f','TreatAsEmpty','None');
     fclose(fidRTT);
 
     src=dataRTT{1};
