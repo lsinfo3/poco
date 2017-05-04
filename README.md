@@ -21,6 +21,18 @@ POCO has been demonstrated at the following conferences:
   * IEEE/IFIP Network Operations and Management Symposium (NOMS), Krakow, Poland, May 2014: [POCO: A Framework for the Pareto-Optimal Resilient Controller Placement in SDN-based Core Networks.](http://www3.informatik.uni-wuerzburg.de/research/projects/saser/poco/publications/pocodemo_ieee_noms.pdf)
   * IEEE International Conference on Computer Communications (INFOCOM), Toronto, Canada, April 2014: [POCO-PLC: Enabling Dynamic Pareto-Optimal Resilient Controller Placement in SDN Networks.](http://www3.informatik.uni-wuerzburg.de/research/projects/saser/poco/publications/pocodemo_ieee_info.pdf)
 
+POCO PLC
+--------
+In order to use POCO PLC, proceed according to the following steps.
+  * Extract the [localbackup folder](http://euros.informatik.uni-wuerzburg.de/public/localbackup.zip) to your POCO root folder (i.e., the localbackup folder should be in the same folder as poco_GUI.m). Each of these CSV files contains RTT-values for each pair of nodes in the planetlabV2.topo.mat topology for a given timestamp.
+  * Start POCO by running poco_GUI in MATLAB.
+  * You can cancel the topology selection step.
+  * In the menu, click POCO PLC -> Start POCO PLC.
+  * In the menu, click Placements -> Calculate placements -> Failure free -> k = ...
+  * In the Pareto-plot, click on a placement in order to activate it.
+  * In the menu, click POCO PLC -> Start Planetlab Plot Loop.
+
+In order to get started with custom PLC scenarios, check the PLCPlotLoop function in poco_GUI.m and adapt the code in the code/*PLC.m files.
 
 Authors
 -------
