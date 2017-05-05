@@ -24,7 +24,7 @@ POCO has been demonstrated at the following conferences:
 POCO PLC
 --------
 In order to use POCO PLC, proceed according to the following steps.
-  * Extract the [localbackup folder](http://euros.informatik.uni-wuerzburg.de/public/localbackup.zip) to your POCO root folder (i.e., the localbackup folder should be in the same folder as poco_GUI.m). Each of these CSV files contains RTT-values for each pair of nodes in the planetlabV2.topo.mat topology for a given timestamp.
+  * Extract the [localbackup folder](https://euros.informatik.uni-wuerzburg.de/public/localbackup.zip) to your POCO root folder (i.e., the localbackup folder should be in the same folder as poco_GUI.m). Each of these CSV files contains RTT-values for each pair of nodes in the planetlabV2.topo.mat topology for a given timestamp.
   * Start POCO by running poco_GUI in MATLAB.
   * You can cancel the topology selection step.
   * In the menu, click POCO PLC -> Start POCO PLC.
